@@ -1,11 +1,10 @@
 package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
 
 import java.util.UUID;
 

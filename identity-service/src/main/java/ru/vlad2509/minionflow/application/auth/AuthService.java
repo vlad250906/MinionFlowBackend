@@ -10,9 +10,11 @@ import ru.vlad2509.minionflow.application.dto.TokenPair;
 import ru.vlad2509.minionflow.application.dto.UserInfo;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.AccountStatus;
+import ru.vlad2509.minionflow.application.util.PasswordService;
+import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.SessionEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.UserEntity;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.SessionRepository;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.UserRepository;
 
@@ -66,11 +68,11 @@ public class AuthService {
         if (!passwordService.verifyPassword(password, user.passwordHash))
             throw new ApiException(ApiError.INVALID_CREDENTIALS, "password incorrect");
 
-//        if (user.status == AccountStatus.CREATED)
-//            throw new ApiException(ApiError.EMAIL_NOT_VERIFIED);
-//
-//        if (user.status == AccountStatus.SUSPENDED)
-//            throw new ApiException(ApiError.ACCOUNT_SUSPENDED);
+        if (user.status == AccountStatus.CREATED)
+            throw new ApiException(ApiError.EMAIL_NOT_VERIFIED);
+
+        if (user.status == AccountStatus.SUSPENDED)
+            throw new ApiException(ApiError.ACCOUNT_SUSPENDED);
 
         UUID sessionId = UUID.randomUUID();
         UUID jwtId = UUID.randomUUID();
@@ -91,7 +93,7 @@ public class AuthService {
 
         Optional<SessionEntity> sessionOptional = sessionRepository.findByIdOptional(decodedRefreshToken.sessionId());
         if (sessionOptional.isEmpty())
-            throw new ApiException(ApiError.UNAUTHORIZED);
+            throw new ApiException(ApiError.UNAUTHORIZED, "session not found");
 
         SessionEntity session = sessionOptional.get();
         if (!session.jwtId.equals(decodedRefreshToken.jwtId()) || !session.user.userId.equals(decodedRefreshToken.userId())) {
@@ -116,7 +118,7 @@ public class AuthService {
     public void logout(String refreshToken) {
         DecodedRefreshToken decodedRefreshToken = tokenService.verifyRefreshToken(refreshToken);
         if (decodedRefreshToken == null)
-            throw new ApiException(ApiError.UNAUTHORIZED);
+            throw new ApiException(ApiError.UNAUTHORIZED, "verify failed");
 
         UUID sessionId = decodedRefreshToken.sessionId();
         if (sessionRepository.deleteById(sessionId) == 0)
@@ -127,7 +129,7 @@ public class AuthService {
     public void logoutAll(String refreshToken) {
         DecodedRefreshToken decodedRefreshToken = tokenService.verifyRefreshToken(refreshToken);
         if (decodedRefreshToken == null)
-            throw new ApiException(ApiError.UNAUTHORIZED);
+            throw new ApiException(ApiError.UNAUTHORIZED, "verify failed");
 
         UUID userId = decodedRefreshToken.userId();
         if (sessionRepository.deleteByUserId(userId) == 0)

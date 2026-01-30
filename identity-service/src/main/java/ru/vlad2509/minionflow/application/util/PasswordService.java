@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.application.auth;
+package ru.vlad2509.minionflow.application.util;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;

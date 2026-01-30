@@ -2,6 +2,11 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    EMAIL_VERIFICATION_FAILED(404, "emailVerificationFailed", "AccountId or VerificationToken is invalid"),
+    EMAIL_ALREADY_VERIFIED(409, "emailAlreadyVerified", "Email is already verified"),
+    EMAIL_TAKEN(409, "emailTaken", "Email is already taken"),
+    USERNAME_TAKEN(409, "usernameTaken", "Username is already taken"),
+    USER_NOT_FOUND_ID(404, "userNotFound", "Username with userId not found"),
     UNAUTHORIZED(401, "unauthorized", "Unauthorized"),
     ACCOUNT_SUSPENDED(403, "accountSuspended", "Account was suspended. Contact the support"),
     EMAIL_NOT_VERIFIED(403, "emailNotVerified", "Account's email is not verified"),

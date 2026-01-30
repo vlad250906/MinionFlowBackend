@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.application.auth;
+package ru.vlad2509.minionflow.application.util;
 
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
@@ -11,7 +11,6 @@ import ru.vlad2509.minionflow.application.dto.UserInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 

@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.api.auth.dto;
+package ru.vlad2509.minionflow.api.auth.dto.response;
 
 public record JwtPairResponse(
 
