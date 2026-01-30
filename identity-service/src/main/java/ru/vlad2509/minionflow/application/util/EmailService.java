@@ -1,6 +1,9 @@
-﻿package ru.vlad2509.minionflow.application.util;
+package ru.vlad2509.minionflow.application.util;
 
+import io.quarkus.mailer.Mail;
+import io.quarkus.mailer.Mailer;
 import io.quarkus.scheduler.Scheduled;
+import io.vertx.ext.mail.SMTPException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -16,6 +19,9 @@ public class EmailService {
     @Inject
     EmailMessageRepository emailMessageRepository;
 
+    @Inject
+    Mailer mailer;
+
     @ConfigProperty(name = "identity-service.email_batch", defaultValue = "10")
     int batchSize;
 
@@ -29,12 +35,12 @@ public class EmailService {
     int emailMaxAttempts;
 
     @Transactional
-    public void scheduleSending(String email, String content){
+    public void scheduleSending(String email, String content) {
         EmailMessageEntity entity = new EmailMessageEntity(email, content, emailMaxAttempts);
         emailMessageRepository.persist(entity);
     }
 
-    @Scheduled(every="5s")
+    @Scheduled(every = "5s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     public void sendEmailBatch() {
         List<EmailMessageEntity> batch = emailMessageRepository.takeMessagePage(batchSize, instanceId, takeEmailLimit);
 
@@ -52,7 +58,28 @@ public class EmailService {
     }
 
     private SendingResult sendEmail(String email, String message) {
-        return SendingResult.IMPOSSIBLE;
+        try {
+            mailer.send(Mail.withText(email, "test test test", message));
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            SMTPException smtpException = findClause(ex, SMTPException.class);
+            if (smtpException == null)
+                return SendingResult.UNAVAILABLE;
+            if (smtpException.isPermanent())
+                return SendingResult.IMPOSSIBLE;
+            return SendingResult.UNAVAILABLE;
+        }
+        return SendingResult.SUCCESS;
+    }
+
+    private <T extends Throwable> T findClause(Throwable throwable, Class<T> clazz) {
+        Throwable cur = throwable;
+        while (cur != null) {
+            if (clazz.isInstance(cur))
+                return clazz.cast(cur);
+            cur = cur.getCause();
+        }
+        return null;
     }
 
     private int calcDelay(EmailMessageEntity entity) {

@@ -1,4 +1,4 @@
-﻿package ru.vlad2509.minionflow.infrastructure.persistence.repository;
+package ru.vlad2509.minionflow.infrastructure.persistence.repository;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;

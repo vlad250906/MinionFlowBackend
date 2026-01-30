@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
+import ru.vlad2509.minionflow.application.util.EmailService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.VerificationTicketEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
@@ -28,6 +29,9 @@ public class AccountService {
     @Inject
     PasswordService passwordService;
 
+    @Inject
+    EmailService emailService;
+
     @Transactional
     public UUID register(String email, String username, String password) {
         if (userRepository.findByEmailOptional(email).isPresent())
@@ -42,6 +46,9 @@ public class AccountService {
         VerificationTicketEntity ticket = new VerificationTicketEntity(user.userId,
                 VerificationTicketType.REGISTER_TICKET, UUID.randomUUID());
         verificationTicketRepository.persist(ticket);
+
+        emailService.scheduleSending(email, "registration. accountId=" + user.userId +
+                "; verificationToken=" + ticket.verificationToken);
 
         return user.userId;
     }

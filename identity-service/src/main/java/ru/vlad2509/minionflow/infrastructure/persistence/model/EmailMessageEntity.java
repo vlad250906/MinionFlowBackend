@@ -1,4 +1,4 @@
-﻿package ru.vlad2509.minionflow.infrastructure.persistence.model;
+package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
 import java.time.Instant;
 
