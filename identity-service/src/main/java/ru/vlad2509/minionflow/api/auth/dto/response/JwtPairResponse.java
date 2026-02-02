@@ -1,9 +1,11 @@
 package ru.vlad2509.minionflow.api.auth.dto.response;
 
+import java.time.Instant;
+
 public record JwtPairResponse(
 
         String accessJWT,
-        String refreshJWT
+        Instant validUntil
 
 ) {
 }

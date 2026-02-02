@@ -3,13 +3,19 @@ package ru.vlad2509.minionflow.api.auth;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestCookie;
+import org.jboss.resteasy.reactive.RestResponse;
 import ru.vlad2509.minionflow.api.auth.dto.response.JwtPairResponse;
 import ru.vlad2509.minionflow.api.auth.dto.request.LoginRequest;
 import ru.vlad2509.minionflow.api.auth.dto.request.RefreshRequest;
 import ru.vlad2509.minionflow.application.auth.AuthService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
 import ru.vlad2509.minionflow.application.dto.TokenPair;
+import ru.vlad2509.minionflow.application.util.TokenService;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -19,32 +25,62 @@ public class AuthResource {
     @Inject
     AuthService authService;
 
+    @Inject
+    TokenService tokenService;
+
     @POST
     @Path("/login")
-    public JwtPairResponse login(@Valid LoginRequest request) {
-        System.out.println("login");
-        System.out.println(request);
+    public RestResponse<JwtPairResponse> login(@Valid LoginRequest request) {
         TokenPair pair = authService.login(request.email(), request.username(), request.password());
-        return new JwtPairResponse(pair.accessJWT(), pair.refreshJWT());
+
+        NewCookie cookie = new NewCookie.Builder("refreshJWT")
+                .secure(true)
+                .httpOnly(true)
+                .maxAge(tokenService.getRefreshTokenTtl())
+                .value(pair.refreshJWT())
+                .build();
+
+        return RestResponse.ResponseBuilder
+                .ok(new JwtPairResponse(pair.accessJWT(), pair.issuedAt().plusSeconds(tokenService.getAccessTokenTtl())))
+                .cookie(cookie)
+                .build();
     }
 
     @POST
     @Path("/refresh")
-    public JwtPairResponse refresh(@Valid RefreshRequest request) {
-        TokenPair pair = authService.refreshToken(request.refreshJWT());
-        return new JwtPairResponse(pair.accessJWT(), pair.refreshJWT());
+    public RestResponse<JwtPairResponse> refresh(@Valid RefreshRequest request,
+                                                 @RestCookie("refreshJWT") String refreshJWT) {
+        TokenPair pair = authService.refreshToken(refreshJWT);
+
+        NewCookie cookie = new NewCookie.Builder("refreshJWT")
+                .secure(true)
+                .httpOnly(true)
+                .maxAge(tokenService.getRefreshTokenTtl())
+                .value(pair.refreshJWT())
+                .build();
+
+        return RestResponse.ResponseBuilder
+                .ok(new JwtPairResponse(pair.accessJWT(), pair.issuedAt().plusSeconds(tokenService.getAccessTokenTtl())))
+                .cookie(cookie)
+                .build();
     }
 
     @POST
     @Path("/logout")
-    public void logout(@Valid RefreshRequest request) {
-        authService.logout(request.refreshJWT());
+    public RestResponse logout(@Valid RefreshRequest request,
+                               @RestCookie("refreshJWT") String refreshJWT) {
+        authService.logout(refreshJWT);
+        NewCookie cookie = new NewCookie.Builder("refreshJWT").maxAge(0).build();
+        return RestResponse.ResponseBuilder.noContent().cookie(cookie).build();
     }
 
     @POST
     @Path("/logout-all")
-    public void logoutAll(@Valid RefreshRequest request) {
-        authService.logoutAll(request.refreshJWT());
+    public RestResponse logoutAll(@Valid RefreshRequest request,
+                                  @RestCookie("refreshJWT") String refreshJWT) {
+        authService.logoutAll(refreshJWT);
+        NewCookie cookie = new NewCookie.Builder("refreshJWT").maxAge(0).build();
+        return RestResponse.ResponseBuilder.noContent().cookie(cookie).build();
     }
 
 
@@ -54,7 +90,7 @@ public class AuthResource {
     @GET
     @Path("/test")
     public String hash(@QueryParam("password") String password) {
-        if(password == null)
+        if (password == null)
             return "";
         return passwordService.hashNew(password);
     }

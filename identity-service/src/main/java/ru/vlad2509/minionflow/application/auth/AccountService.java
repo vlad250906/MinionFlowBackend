@@ -47,38 +47,33 @@ public class AccountService {
                 VerificationTicketType.REGISTER_TICKET, UUID.randomUUID());
         verificationTicketRepository.persist(ticket);
 
-        emailService.scheduleSending(email, "registration. accountId=" + user.userId +
-                "; verificationToken=" + ticket.verificationToken);
+        emailService.scheduleSending(email, "registration \naccountId=" + user.userId +
+                "\nverificationToken=" + ticket.verificationToken);
 
         return user.userId;
     }
 
     public boolean isVerificationRequired(UUID userId) {
-        Optional<UserEntity> userEntityOptional = userRepository.findByIdOptional(userId);
-        if (userEntityOptional.isEmpty())
-            throw new ApiException(ApiError.USER_NOT_FOUND_ID, "user with id = " + userId + " not found");
-        UserEntity user = userEntityOptional.get();
-
+        UserEntity user = userRepository.findByIdOptional(userId)
+                .orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND_ID, "user with id = " + userId + " not found"));
         return user.status == AccountStatus.CREATED;
     }
 
     @Transactional
     public void verifyRegistration(UUID accountId, UUID verificationToken) {
-        Optional<UserEntity> userOptional = userRepository.findByIdOptional(accountId);
-        if (userOptional.isEmpty())
-            throw new ApiException(ApiError.EMAIL_NOT_VERIFIED, "user not found");
-        if (userOptional.get().status != AccountStatus.CREATED)
+        UserEntity user = userRepository.findByIdOptional(accountId)
+                .orElseThrow(() -> new ApiException(ApiError.EMAIL_NOT_VERIFIED, "user not found"));
+        if (user.status != AccountStatus.CREATED)
             throw new ApiException(ApiError.EMAIL_ALREADY_VERIFIED);
 
-        Optional<VerificationTicketEntity> ticketOptional = verificationTicketRepository.findByUserAndType(accountId,
-                VerificationTicketType.REGISTER_TICKET);
-        if (ticketOptional.isEmpty())
-            throw new ApiException(ApiError.UNEXPECTED_ERROR, "verificationticket not found");
-        if (!ticketOptional.get().verificationToken.equals(verificationToken))
+        VerificationTicketEntity ticket = verificationTicketRepository.findByUserAndType(accountId,
+                VerificationTicketType.REGISTER_TICKET)
+                .orElseThrow(() -> new ApiException(ApiError.UNEXPECTED_ERROR, "verificationticket not found"));
+        if (!ticket.verificationToken.equals(verificationToken))
             throw new ApiException(ApiError.EMAIL_NOT_VERIFIED, "wrong verification token");
 
-        userOptional.get().status = AccountStatus.ACTIVE;
-        verificationTicketRepository.delete(ticketOptional.get());
+        user.status = AccountStatus.ACTIVE;
+        verificationTicketRepository.delete(ticket);
     }
 
 }

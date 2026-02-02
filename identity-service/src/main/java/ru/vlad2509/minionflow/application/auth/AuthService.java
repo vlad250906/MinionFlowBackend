@@ -18,6 +18,7 @@ import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStat
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.SessionRepository;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.UserRepository;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -25,12 +26,6 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class AuthService {
-
-    @ConfigProperty(name = "identity-service.access-jwt-ttl", defaultValue = "300")
-    int accessTokenTtl;
-
-    @ConfigProperty(name = "identity-service.refresh-jwt-ttl", defaultValue = "20000")
-    int refreshTokenTtl;
 
     @Inject
     TokenService tokenService;
@@ -55,14 +50,10 @@ public class AuthService {
         if ((email == null || email.isEmpty()) && (username == null || username.isEmpty()))
             throw new ApiException(ApiError.LOGIN_NOT_ENOUGH);
 
-        Optional<UserEntity> userOptional = (email != null && !email.isEmpty()) ?
+        UserEntity user = ((email != null && !email.isEmpty()) ?
                 userRepository.findByEmailOptional(email) :
-                userRepository.findByUsernameOptional(username);
-
-        if (userOptional.isEmpty())
-            throw new ApiException(ApiError.INVALID_CREDENTIALS, "user not found");
-
-        UserEntity user = userOptional.get();
+                userRepository.findByUsernameOptional(username))
+                .orElseThrow(() -> new ApiException(ApiError.INVALID_CREDENTIALS, "user not found"));
         UserInfo userInfo = new UserInfo(user.userId, user.email, user.username);
 
         if (!passwordService.verifyPassword(password, user.passwordHash))
@@ -76,13 +67,14 @@ public class AuthService {
 
         UUID sessionId = UUID.randomUUID();
         UUID jwtId = UUID.randomUUID();
+        Instant issueTime = Instant.now();
         SessionEntity sessionEntity = new SessionEntity(sessionId, jwtId, user);
         sessionRepository.persist(sessionEntity);
 
-        String accessJwt = tokenService.createAccessToken(userInfo, groups, accessTokenTtl);
-        String refreshJwt = tokenService.creteRefreshToken(userInfo, sessionId, jwtId, refreshTokenTtl);
+        String accessJwt = tokenService.createAccessToken(userInfo, groups, issueTime);
+        String refreshJwt = tokenService.creteRefreshToken(userInfo, sessionId, jwtId, issueTime);
 
-        return new TokenPair(accessJwt, refreshJwt);
+        return new TokenPair(accessJwt, refreshJwt, issueTime);
     }
 
     @Transactional
@@ -91,11 +83,9 @@ public class AuthService {
         if (decodedRefreshToken == null)
             throw new ApiException(ApiError.UNAUTHORIZED, "verify failed");
 
-        Optional<SessionEntity> sessionOptional = sessionRepository.findByIdOptional(decodedRefreshToken.sessionId());
-        if (sessionOptional.isEmpty())
-            throw new ApiException(ApiError.UNAUTHORIZED, "session not found");
+        SessionEntity session = sessionRepository.findByIdOptional(decodedRefreshToken.sessionId())
+                .orElseThrow(() -> new ApiException(ApiError.UNAUTHORIZED, "session not found"));
 
-        SessionEntity session = sessionOptional.get();
         if (!session.jwtId.equals(decodedRefreshToken.jwtId()) || !session.user.userId.equals(decodedRefreshToken.userId())) {
             System.out.println("DOUBLE USE OF REFRESH TOKEN");
             System.out.println(session.user.userId);
@@ -107,11 +97,13 @@ public class AuthService {
         UserInfo userInfo = new UserInfo(user.userId, user.email, user.username);
 
         UUID newJwtId = UUID.randomUUID();
+        Instant issueTime = Instant.now();
         session.jwtId = newJwtId;
 
-        String accessJwt = tokenService.createAccessToken(userInfo, groups, accessTokenTtl);
-        String refreshJwt = tokenService.creteRefreshToken(userInfo, decodedRefreshToken.sessionId(), newJwtId, refreshTokenTtl);
-        return new TokenPair(accessJwt, refreshJwt);
+        String accessJwt = tokenService.createAccessToken(userInfo, groups, issueTime);
+        String refreshJwt = tokenService.creteRefreshToken(userInfo, decodedRefreshToken.sessionId(), newJwtId,
+                issueTime);
+        return new TokenPair(accessJwt, refreshJwt, issueTime);
     }
 
     @Transactional
