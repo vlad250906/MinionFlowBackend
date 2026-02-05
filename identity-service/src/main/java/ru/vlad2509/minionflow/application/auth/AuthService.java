@@ -4,7 +4,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotEmpty;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import ru.vlad2509.minionflow.application.dto.DecodedRefreshToken;
 import ru.vlad2509.minionflow.application.dto.TokenPair;
 import ru.vlad2509.minionflow.application.dto.UserInfo;
@@ -15,12 +14,10 @@ import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.SessionEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.UserEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
-import ru.vlad2509.minionflow.infrastructure.persistence.repository.SessionRepository;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.UserRepository;
 
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,13 +28,13 @@ public class AuthService {
     TokenService tokenService;
 
     @Inject
+    SessionService sessionService;
+
+    @Inject
     PasswordService passwordService;
 
     @Inject
     UserRepository userRepository;
-
-    @Inject
-    SessionRepository sessionRepository;
 
     private final Set<String> groups = new HashSet<>();
 
@@ -65,34 +62,18 @@ public class AuthService {
         if (user.status == AccountStatus.SUSPENDED)
             throw new ApiException(ApiError.ACCOUNT_SUSPENDED);
 
-        UUID sessionId = UUID.randomUUID();
-        UUID jwtId = UUID.randomUUID();
         Instant issueTime = Instant.now();
-        SessionEntity sessionEntity = new SessionEntity(sessionId, jwtId, user);
-        sessionRepository.persist(sessionEntity);
+        SessionEntity sessionEntity = sessionService.persistSession(user);
 
         String accessJwt = tokenService.createAccessToken(userInfo, groups, issueTime);
-        String refreshJwt = tokenService.creteRefreshToken(userInfo, sessionId, jwtId, issueTime);
+        String refreshJwt = tokenService.creteRefreshToken(userInfo, sessionEntity.sessionId, sessionEntity.jwtId, issueTime);
 
-        return new TokenPair(accessJwt, refreshJwt, issueTime);
+        return new TokenPair(user.userId, accessJwt, refreshJwt, issueTime);
     }
 
     @Transactional
     public TokenPair refreshToken(String refreshToken) {
-        DecodedRefreshToken decodedRefreshToken = tokenService.verifyRefreshToken(refreshToken);
-        if (decodedRefreshToken == null)
-            throw new ApiException(ApiError.UNAUTHORIZED, "verify failed");
-
-        SessionEntity session = sessionRepository.findByIdOptional(decodedRefreshToken.sessionId())
-                .orElseThrow(() -> new ApiException(ApiError.UNAUTHORIZED, "session not found"));
-
-        if (!session.jwtId.equals(decodedRefreshToken.jwtId()) || !session.user.userId.equals(decodedRefreshToken.userId())) {
-            System.out.println("DOUBLE USE OF REFRESH TOKEN");
-            System.out.println(session.user.userId);
-            System.out.println(decodedRefreshToken.userId());
-            throw new ApiException(ApiError.UNAUTHORIZED, "double use");
-        }
-
+        SessionEntity session = sessionService.getSession(refreshToken);
         UserEntity user = session.user;
         UserInfo userInfo = new UserInfo(user.userId, user.email, user.username);
 
@@ -101,30 +82,20 @@ public class AuthService {
         session.jwtId = newJwtId;
 
         String accessJwt = tokenService.createAccessToken(userInfo, groups, issueTime);
-        String refreshJwt = tokenService.creteRefreshToken(userInfo, decodedRefreshToken.sessionId(), newJwtId,
+        String refreshJwt = tokenService.creteRefreshToken(userInfo, session.sessionId, newJwtId,
                 issueTime);
-        return new TokenPair(accessJwt, refreshJwt, issueTime);
+        return new TokenPair(user.userId, accessJwt, refreshJwt, issueTime);
     }
 
     @Transactional
     public void logout(String refreshToken) {
-        DecodedRefreshToken decodedRefreshToken = tokenService.verifyRefreshToken(refreshToken);
-        if (decodedRefreshToken == null)
-            throw new ApiException(ApiError.UNAUTHORIZED, "verify failed");
-
-        UUID sessionId = decodedRefreshToken.sessionId();
-        if (sessionRepository.deleteById(sessionId) == 0)
+        if (!sessionService.logout(sessionService.getSession(refreshToken)))
             throw new ApiException(ApiError.UNAUTHORIZED, "session not found");
     }
 
     @Transactional
     public void logoutAll(String refreshToken) {
-        DecodedRefreshToken decodedRefreshToken = tokenService.verifyRefreshToken(refreshToken);
-        if (decodedRefreshToken == null)
-            throw new ApiException(ApiError.UNAUTHORIZED, "verify failed");
-
-        UUID userId = decodedRefreshToken.userId();
-        if (sessionRepository.deleteByUserId(userId) == 0)
+        if (!sessionService.logoutAll(sessionService.getSession(refreshToken).user.userId))
             throw new ApiException(ApiError.UNAUTHORIZED, "session not found");
     }
 

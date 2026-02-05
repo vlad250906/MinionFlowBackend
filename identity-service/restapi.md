@@ -23,6 +23,10 @@ POST /api/account/{accountId}/passwordChange
 accessJWT in header
 body: {oldPassword, newPassword}
 
+POST /api/account/{accountId}/usernameChange
+accessJWT in header
+body: {newUsername}
+
 /api/recovery/begin
 body: {email}
 

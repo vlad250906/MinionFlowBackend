@@ -12,6 +12,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import ru.vlad2509.minionflow.api.auth.dto.response.JwtPairResponse;
 import ru.vlad2509.minionflow.api.auth.dto.request.LoginRequest;
 import ru.vlad2509.minionflow.api.auth.dto.request.RefreshRequest;
+import ru.vlad2509.minionflow.api.auth.dto.response.LoginResponse;
 import ru.vlad2509.minionflow.application.auth.AuthService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
 import ru.vlad2509.minionflow.application.dto.TokenPair;
@@ -30,18 +31,19 @@ public class AuthResource {
 
     @POST
     @Path("/login")
-    public RestResponse<JwtPairResponse> login(@Valid LoginRequest request) {
+    public RestResponse<LoginResponse> login(@Valid LoginRequest request) {
         TokenPair pair = authService.login(request.email(), request.username(), request.password());
 
         NewCookie cookie = new NewCookie.Builder("refreshJWT")
                 .secure(true)
                 .httpOnly(true)
+                .path("/")
                 .maxAge(tokenService.getRefreshTokenTtl())
                 .value(pair.refreshJWT())
                 .build();
 
         return RestResponse.ResponseBuilder
-                .ok(new JwtPairResponse(pair.accessJWT(), pair.issuedAt().plusSeconds(tokenService.getAccessTokenTtl())))
+                .ok(new LoginResponse(pair.userId(), pair.accessJWT(), pair.issuedAt().plusSeconds(tokenService.getAccessTokenTtl())))
                 .cookie(cookie)
                 .build();
     }
@@ -55,6 +57,7 @@ public class AuthResource {
         NewCookie cookie = new NewCookie.Builder("refreshJWT")
                 .secure(true)
                 .httpOnly(true)
+                .path("/")
                 .maxAge(tokenService.getRefreshTokenTtl())
                 .value(pair.refreshJWT())
                 .build();
