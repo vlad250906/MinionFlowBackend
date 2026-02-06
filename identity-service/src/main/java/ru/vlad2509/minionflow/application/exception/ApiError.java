@@ -2,6 +2,7 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    RECOVERY_FAILED(404, "accountRecoveryFailed", "AccountId or VerificationToken is invalid"),
     EMAIL_VERIFICATION_FAILED(404, "emailVerificationFailed", "AccountId or VerificationToken is invalid"),
     EMAIL_ALREADY_VERIFIED(409, "emailAlreadyVerified", "Email is already verified"),
     EMAIL_TAKEN(409, "emailTaken", "Email is already taken"),

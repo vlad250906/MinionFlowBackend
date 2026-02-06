@@ -51,7 +51,7 @@ public class AuthService {
                 userRepository.findByEmailOptional(email) :
                 userRepository.findByUsernameOptional(username))
                 .orElseThrow(() -> new ApiException(ApiError.INVALID_CREDENTIALS, "user not found"));
-        UserInfo userInfo = new UserInfo(user.userId, user.email, user.username);
+        UserInfo userInfo = new UserInfo(user.userId, user.email, user.username, user.status);
 
         if (!passwordService.verifyPassword(password, user.passwordHash))
             throw new ApiException(ApiError.INVALID_CREDENTIALS, "password incorrect");
@@ -75,7 +75,7 @@ public class AuthService {
     public TokenPair refreshToken(String refreshToken) {
         SessionEntity session = sessionService.getSession(refreshToken);
         UserEntity user = session.user;
-        UserInfo userInfo = new UserInfo(user.userId, user.email, user.username);
+        UserInfo userInfo = new UserInfo(user.userId, user.email, user.username, user.status);
 
         UUID newJwtId = UUID.randomUUID();
         Instant issueTime = Instant.now();

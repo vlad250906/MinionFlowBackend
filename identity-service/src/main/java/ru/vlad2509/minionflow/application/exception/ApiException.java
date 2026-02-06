@@ -20,8 +20,8 @@ public class ApiException extends RuntimeException {
         this.errorCode = apiError.getErrorCode();
     }
 
-    public ApiException(ApiError apiError, String message) {
-        super(MyApplication.IS_DEV ? message : apiError.getMessage());
+    public ApiException(ApiError apiError, String debugMessage) {
+        super(MyApplication.IS_DEV ? debugMessage : apiError.getMessage());
         this.httpStatusCode = apiError.getHttpStatusCode();
         this.errorCode = apiError.getErrorCode();
     }

@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.openapi.annotations.links.Link;
 import ru.vlad2509.minionflow.application.dto.DecodedRefreshToken;
+import ru.vlad2509.minionflow.application.dto.UserInfo;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.EmailService;
@@ -36,9 +37,6 @@ public class AccountService {
 
     @Inject
     EmailService emailService;
-
-    @Inject
-    TokenService tokenService;
 
     @Inject
     SessionService sessionService;
@@ -108,6 +106,12 @@ public class AccountService {
         SessionEntity session = sessionService.getSession(refreshToken);
         UserEntity userEntity = session.user;
         userEntity.username = newUsername;
+    }
+
+    public UserInfo getUserInfo(UUID userId) {
+        UserEntity user = userRepository.findByIdOptional(userId)
+                .orElseThrow(() -> new ApiException(ApiError.UNAUTHORIZED, "user not found"));
+        return new UserInfo(user.userId, user.email, user.username, user.status);
     }
 
 }
