@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveViolationException;
+import io.quarkus.security.AuthenticationFailedException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -26,6 +27,13 @@ public class ApiExceptionHandler {
 
     private static final Logger LOG = Logger.getLogger(ApiExceptionHandler.class);
     private static final String PROBLEM_JSON = "application/problem+json";
+
+    @ServerExceptionMapper
+    public Response mapUnauthorized(AuthenticationFailedException ex, UriInfo uriInfo, ContainerRequestContext req) {
+        //ex.printStackTrace();
+        return build(401, "unauthorized", "Unauthorized", "Incorrect Bearer JWT", uriInfo, req, null);
+    }
+
 
     @ServerExceptionMapper
     public Response mapJsonParse(JsonParseException ex, UriInfo uriInfo, ContainerRequestContext req) {
