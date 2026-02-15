@@ -12,7 +12,7 @@ public enum ApiError {
     ACCOUNT_SUSPENDED(403, "accountSuspended", "Account was suspended. Contact the support"),
     EMAIL_NOT_VERIFIED(403, "emailNotVerified", "Account's email is not verified"),
     INVALID_CREDENTIALS(401, "invalidCredentials", "Invalid email/username or password"),
-    LOGIN_NOT_ENOUGH(422, "loginNotEnough", "provide at least one of: email, username"),
+    LOGIN_NOT_ENOUGH(422, "loginNotEnough", "provide exactly one of: email, username"),
     UNEXPECTED_ERROR(500, "unexpectedError", "Unexpected error");
 
     private final int httpStatusCode;

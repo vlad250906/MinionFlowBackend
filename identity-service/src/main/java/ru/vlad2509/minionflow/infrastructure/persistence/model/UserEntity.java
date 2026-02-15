@@ -4,6 +4,8 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.vo.UsernameVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
 
 import java.util.UUID;
@@ -32,19 +34,19 @@ public class UserEntity extends PanacheEntityBase {
 
     public UserEntity() {}
 
-    public UserEntity(String email, String username, String passwordHash) {
+    public UserEntity(EmailVo email, UsernameVo username, String passwordHash) {
         this.userId = UUID.randomUUID();
         this.status = AccountStatus.CREATED;
 
-        this.email = email;
-        this.username = username;
+        this.email = email.value();
+        this.username = username.value();
         this.passwordHash = passwordHash;
     }
 
-    public UserEntity(UUID userId, String email, String username, String passwordHash, AccountStatus status) {
+    public UserEntity(UUID userId, EmailVo email, UsernameVo username, String passwordHash, AccountStatus status) {
         this.userId = userId;
-        this.email = email;
-        this.username = username;
+        this.email = email.value();
+        this.username = username.value();
         this.passwordHash = passwordHash;
         this.status = status;
     }

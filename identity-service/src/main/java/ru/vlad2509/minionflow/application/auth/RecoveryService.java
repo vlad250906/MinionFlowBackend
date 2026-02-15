@@ -7,6 +7,7 @@ import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.EmailService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.UserEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.VerificationTicketEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.VerificationTicketType;
@@ -32,7 +33,7 @@ public class RecoveryService {
     PasswordService passwordService;
 
     @Transactional
-    public void beginRecovery(String email) {
+    public void beginRecovery(EmailVo email) {
         UserEntity user = userRepository.findByEmailOptional(email).orElse(null);
         if (user == null)
             return;

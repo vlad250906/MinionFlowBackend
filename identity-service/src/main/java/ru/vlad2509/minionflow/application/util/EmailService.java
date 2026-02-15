@@ -8,6 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.EmailMessageEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.EmailMessageRepository;
 
@@ -47,7 +48,7 @@ public class EmailService {
     private final AtomicInteger leasedTotal = new AtomicInteger(0);
 
     @Transactional
-    public void scheduleSending(String email, String content) {
+    public void scheduleSending(EmailVo email, String content) {
         EmailMessageEntity entity = new EmailMessageEntity(email, content, emailMaxAttempts);
         emailMessageRepository.persist(entity);
     }

@@ -1,18 +1,16 @@
 package ru.vlad2509.minionflow.api.auth.dto.request;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.vo.UsernameVo;
 
 public record LoginRequest(
-        @Email
-        @Size(max = 100)
-        String email,
 
-        @Size(min = 3, max = 52)
-        String username,
-
-        @Size(min = 8, max = 52)
+        @Valid @NotNull
+        EmailVo email,
+        @Valid @NotNull
+        UsernameVo username,
         @NotEmpty
         String password
 ) {

@@ -11,6 +11,8 @@ import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.EmailService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
 import ru.vlad2509.minionflow.application.util.TokenService;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.vo.UsernameVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.SessionEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.VerificationTicketEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
@@ -42,7 +44,7 @@ public class AccountService {
     SessionService sessionService;
 
     @Transactional
-    public UUID register(String email, String username, String password) {
+    public UUID register(EmailVo email, UsernameVo username, String password) {
         if (userRepository.findByEmailOptional(email).isPresent())
             throw new ApiException(ApiError.EMAIL_TAKEN);
         if (userRepository.findByUsernameOptional(username).isPresent())
@@ -99,13 +101,13 @@ public class AccountService {
     }
 
     @Transactional
-    public void changeUsername(String refreshToken, String newUsername) {
+    public void changeUsername(String refreshToken, UsernameVo newUsername) {
         if (userRepository.findByUsernameOptional(newUsername).isPresent())
             throw new ApiException(ApiError.USERNAME_TAKEN);
 
         SessionEntity session = sessionService.getSession(refreshToken);
         UserEntity userEntity = session.user;
-        userEntity.username = newUsername;
+        userEntity.username = newUsername.value();
     }
 
     public UserInfo getUserInfo(UUID userId) {

@@ -11,6 +11,8 @@ import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.PasswordService;
 import ru.vlad2509.minionflow.application.util.TokenService;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.vo.UsernameVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.SessionEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.UserEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
@@ -43,11 +45,14 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenPair login(String email, String username, @NotEmpty String password) {
-        if ((email == null || email.isEmpty()) && (username == null || username.isEmpty()))
+    public TokenPair login(EmailVo email, UsernameVo username, @NotEmpty String password) {
+        boolean emailPresent = !(email == null || email.isNullOrEmpty());
+        boolean usernamePresent = !(username == null || username.isNullOrEmpty());
+
+        if ((emailPresent && usernamePresent) || (!emailPresent && !usernamePresent))
             throw new ApiException(ApiError.LOGIN_NOT_ENOUGH);
 
-        UserEntity user = ((email != null && !email.isEmpty()) ?
+        UserEntity user = (emailPresent ?
                 userRepository.findByEmailOptional(email) :
                 userRepository.findByUsernameOptional(username))
                 .orElseThrow(() -> new ApiException(ApiError.INVALID_CREDENTIALS, "user not found"));
