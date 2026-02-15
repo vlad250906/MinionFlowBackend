@@ -12,6 +12,7 @@
 
     <modules>
         <module>identity-service</module>
+        <module>project-service</module>
     </modules>
 
 </project>

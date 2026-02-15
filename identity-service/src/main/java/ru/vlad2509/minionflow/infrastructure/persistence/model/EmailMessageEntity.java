@@ -20,6 +20,9 @@ public class EmailMessageEntity extends PanacheEntityBase {
     public String email;
 
     @Column(nullable = false)
+    public String subject;
+
+    @Column(nullable = false)
     public String content;
 
     @Column(nullable = false)
@@ -43,8 +46,9 @@ public class EmailMessageEntity extends PanacheEntityBase {
     public EmailMessageEntity() {
     }
 
-    public EmailMessageEntity(EmailVo email, String content, int attempts) {
+    public EmailMessageEntity(EmailVo email, String subject, String content, int attempts) {
         this.email = email.value();
+        this.subject = subject;
         this.content = content;
         this.attempts = attempts;
 

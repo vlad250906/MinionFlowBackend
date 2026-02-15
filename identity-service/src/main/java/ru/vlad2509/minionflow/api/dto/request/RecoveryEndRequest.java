@@ -1,0 +1,16 @@
+package ru.vlad2509.minionflow.api.dto.request;
+
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.UUID;
+
+public record RecoveryEndRequest(
+        @NotNull
+        UUID userId,
+        @NotNull
+        UUID verificationToken,
+        @NotEmpty
+        String password
+) {
+}

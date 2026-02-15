@@ -8,6 +8,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import ru.vlad2509.minionflow.application.port.out.SendingResult;
+import ru.vlad2509.minionflow.application.port.out.SmtpService;
 import ru.vlad2509.minionflow.domain.vo.EmailVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.EmailMessageEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.EmailMessageRepository;
@@ -34,7 +36,7 @@ public class EmailService {
     int emailMaxAttempts;
 
     private final EmailMessageRepository emailMessageRepository;
-    private final Mailer mailer;
+    private final SmtpService smtpService;
 
     private final ExecutorService customExecutor;
     private final AtomicInteger leasedTotal = new AtomicInteger(0);
@@ -43,15 +45,15 @@ public class EmailService {
     public EmailService(@ConfigProperty(name = "identity-service.email-sending-pool-size", defaultValue = "5")
                         int poolSize,
                         EmailMessageRepository emailMessageRepository,
-                        Mailer mailer) {
+                        SmtpService smtpService) {
         this.emailMessageRepository = emailMessageRepository;
-        this.mailer = mailer;
         this.customExecutor = Executors.newFixedThreadPool(poolSize);
+        this.smtpService = smtpService;
     }
 
     @Transactional
-    public void scheduleSending(EmailVo email, String content) {
-        EmailMessageEntity entity = new EmailMessageEntity(email, content, emailMaxAttempts);
+    public void scheduleSending(EmailVo email, String subject, String content) {
+        EmailMessageEntity entity = new EmailMessageEntity(email, subject, content, emailMaxAttempts);
         emailMessageRepository.persist(entity);
     }
 
@@ -64,7 +66,7 @@ public class EmailService {
         leasedTotal.addAndGet(batch.size());
 
         for (EmailMessageEntity message : batch) {
-            CompletableFuture.supplyAsync(() -> sendEmail(message.email, message.content), customExecutor)
+            CompletableFuture.supplyAsync(() -> smtpService.sendMail(message.email, message.subject, message.content), customExecutor)
                     .thenApply(sendingResult -> afterSent(sendingResult, message.id))
                     .whenComplete((r, e) -> leasedTotal.decrementAndGet());
         }
@@ -82,37 +84,9 @@ public class EmailService {
         return result;
     }
 
-    private SendingResult sendEmail(String email, String message) {
-        try {
-            mailer.send(Mail.withText(email, "test test test", message));
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            SMTPException smtpException = findClause(ex, SMTPException.class);
-            if (smtpException == null)
-                return SendingResult.UNAVAILABLE;
-            if (smtpException.isPermanent())
-                return SendingResult.IMPOSSIBLE;
-            return SendingResult.UNAVAILABLE;
-        }
-        return SendingResult.SUCCESS;
-    }
-
-    private <T extends Throwable> T findClause(Throwable throwable, Class<T> clazz) {
-        Throwable cur = throwable;
-        while (cur != null) {
-            if (clazz.isInstance(cur))
-                return clazz.cast(cur);
-            cur = cur.getCause();
-        }
-        return null;
-    }
-
     private int calcDelay(EmailMessageEntity entity) {
         return (int) Math.max(2, Math.min(300, Math.pow(2, (emailMaxAttempts - entity.attempts))));
     }
 
-    enum SendingResult {
-        SUCCESS, UNAVAILABLE, IMPOSSIBLE;
-    }
 
 }
