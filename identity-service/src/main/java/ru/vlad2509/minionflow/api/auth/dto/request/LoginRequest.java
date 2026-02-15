@@ -7,11 +7,16 @@ import ru.vlad2509.minionflow.domain.vo.UsernameVo;
 
 public record LoginRequest(
 
-        @Valid @NotNull
+        @Valid
         EmailVo email,
-        @Valid @NotNull
+        @Valid
         UsernameVo username,
         @NotEmpty
         String password
 ) {
+
+    public LoginRequest {
+        if ((email != null && username != null) || (email == null && username == null))
+            throw new IllegalArgumentException("Provide exactly one of: email, username");
+    }
 }

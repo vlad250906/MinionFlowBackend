@@ -64,9 +64,16 @@ public class ApiExceptionHandler {
     @ServerExceptionMapper
     public Response mapWeb(WebApplicationException ex, UriInfo uriInfo, ContainerRequestContext req) {
         int status = ex.getResponse() != null ? ex.getResponse().getStatus() : 500;
+
+        // FIXME: костыль + тут можно случайно раскрыть лишние тех. данные
+        Throwable th = ex;
+        while (status < 500 && th != null && th.getCause() != null) {
+            th = th.getCause();
+        }
+
         String code = (status >= 500) ? "unexpectedError" : "requestError";
         String title = (status >= 500) ? "Server error" : "Request error";
-        String detail = (status >= 500) ? "An unexpected error occurred" : ex.getMessage();
+        String detail = (status >= 500) ? "An unexpected error occurred" : th.getMessage();
         return build(status, code, title, detail, uriInfo, req, null);
     }
 
@@ -128,7 +135,6 @@ public class ApiExceptionHandler {
                            UriInfo uriInfo,
                            ContainerRequestContext req,
                            List<ApiErrorResponse.FieldError> errors) {
-        System.out.println("HEY!");
         ApiErrorResponse body = new ApiErrorResponse(
                 status,
                 title,

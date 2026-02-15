@@ -2,6 +2,8 @@ package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -17,6 +19,7 @@ public class SessionEntity extends PanacheEntityBase {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     public UserEntity user;
 
     public SessionEntity() {

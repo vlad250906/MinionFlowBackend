@@ -19,6 +19,7 @@ import ru.vlad2509.minionflow.application.dto.UserInfo;
 
 import java.util.UUID;
 
+@Path("/")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class AccountResource {

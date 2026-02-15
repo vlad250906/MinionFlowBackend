@@ -46,13 +46,7 @@ public class AuthService {
 
     @Transactional
     public TokenPair login(EmailVo email, UsernameVo username, @NotEmpty String password) {
-        boolean emailPresent = !(email == null || email.isNullOrEmpty());
-        boolean usernamePresent = !(username == null || username.isNullOrEmpty());
-
-        if ((emailPresent && usernamePresent) || (!emailPresent && !usernamePresent))
-            throw new ApiException(ApiError.LOGIN_NOT_ENOUGH);
-
-        UserEntity user = (emailPresent ?
+        UserEntity user = ((email != null) ?
                 userRepository.findByEmailOptional(email) :
                 userRepository.findByUsernameOptional(username))
                 .orElseThrow(() -> new ApiException(ApiError.INVALID_CREDENTIALS, "user not found"));

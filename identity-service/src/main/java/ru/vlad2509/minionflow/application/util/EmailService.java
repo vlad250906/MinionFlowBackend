@@ -33,19 +33,21 @@ public class EmailService {
     @ConfigProperty(name = "identity-service.email-max-attempts", defaultValue = "5")
     int emailMaxAttempts;
 
-    @ConfigProperty(name = "identity-service.email-sending-pool-size", defaultValue = "5")
-    int poolSize;
+    private final EmailMessageRepository emailMessageRepository;
+    private final Mailer mailer;
 
-
-    @Inject
-    EmailMessageRepository emailMessageRepository;
-
-    @Inject
-    Mailer mailer;
-
-    private final ExecutorService customExecutor = Executors.newFixedThreadPool(poolSize);
-
+    private final ExecutorService customExecutor;
     private final AtomicInteger leasedTotal = new AtomicInteger(0);
+
+    @Inject
+    public EmailService(@ConfigProperty(name = "identity-service.email-sending-pool-size", defaultValue = "5")
+                        int poolSize,
+                        EmailMessageRepository emailMessageRepository,
+                        Mailer mailer) {
+        this.emailMessageRepository = emailMessageRepository;
+        this.mailer = mailer;
+        this.customExecutor = Executors.newFixedThreadPool(poolSize);
+    }
 
     @Transactional
     public void scheduleSending(EmailVo email, String content) {
@@ -69,7 +71,7 @@ public class EmailService {
     }
 
     @Transactional
-    private SendingResult afterSent(SendingResult result, long messageId) {
+    public SendingResult afterSent(SendingResult result, long messageId) {
         EmailMessageEntity message = emailMessageRepository.findById(messageId);
         switch (result) {
             case SUCCESS -> emailMessageRepository.markSent(messageId);

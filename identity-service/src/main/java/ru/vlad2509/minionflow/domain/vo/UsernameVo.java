@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+@Schema(implementation = String.class)
 public record UsernameVo(
 
         @Size(min = 3, max = 52)
