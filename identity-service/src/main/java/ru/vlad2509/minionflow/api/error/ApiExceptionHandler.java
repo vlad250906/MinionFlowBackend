@@ -3,6 +3,8 @@ package ru.vlad2509.minionflow.api.error;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveViolationException;
 import io.quarkus.security.AuthenticationFailedException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -141,7 +143,7 @@ public class ApiExceptionHandler {
                 code,
                 detail,
                 uriInfo != null ? uriInfo.getRequestUri() : null,
-                "TODO",
+                currentTraceIdOrNull(),
                 (errors == null || errors.isEmpty()) ? null : errors
         );
 
@@ -149,6 +151,13 @@ public class ApiExceptionHandler {
                 .type(MediaType.valueOf(PROBLEM_JSON))
                 .entity(body)
                 .build();
+    }
+
+    private String currentTraceIdOrNull() {
+        SpanContext ctx = Span.current().getSpanContext();
+        if (ctx == null || !ctx.isValid())
+            return null;
+        return ctx.getTraceId();
     }
 
 }
