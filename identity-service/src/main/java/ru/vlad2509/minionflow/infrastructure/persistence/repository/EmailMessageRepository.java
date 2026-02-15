@@ -13,7 +13,7 @@ import java.util.List;
 public class EmailMessageRepository implements PanacheRepository<EmailMessageEntity> {
 
     @Transactional
-    public List<EmailMessageEntity> takeMessagePage(int pageSize, int instanceId, int takeDurationSeconds) {
+    public List<EmailMessageEntity> leaseMessagePage(int pageSize, int instanceId, int takeDurationSeconds) {
         Instant now = Instant.now();
 
         List<EmailMessageEntity> candidates = find("isSent = false and isFailed = false and " +
@@ -30,9 +30,8 @@ public class EmailMessageRepository implements PanacheRepository<EmailMessageEnt
     }
 
     @Transactional
-    public void releaseMessagePage(List<EmailMessageEntity> emailMessageEntities){
-        List<Long> ids = emailMessageEntities.stream().map(cand -> cand.id).toList();
-        update("takenBy = -1 where id in ?1", ids);
+    public void releaseMessage(EmailMessageEntity emailMessageEntity){
+        update("takenBy = -1 where id in ?1", emailMessageEntity.id);
     }
 
     @Transactional

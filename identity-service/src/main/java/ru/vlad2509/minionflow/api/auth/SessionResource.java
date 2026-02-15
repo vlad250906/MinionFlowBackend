@@ -3,10 +3,8 @@ package ru.vlad2509.minionflow.api.auth;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
-import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestCookie;
 import org.jboss.resteasy.reactive.RestResponse;
 import ru.vlad2509.minionflow.api.auth.dto.response.JwtPairResponse;
@@ -14,14 +12,13 @@ import ru.vlad2509.minionflow.api.auth.dto.request.LoginRequest;
 import ru.vlad2509.minionflow.api.auth.dto.request.RefreshRequest;
 import ru.vlad2509.minionflow.api.auth.dto.response.LoginResponse;
 import ru.vlad2509.minionflow.application.auth.AuthService;
-import ru.vlad2509.minionflow.application.util.PasswordService;
 import ru.vlad2509.minionflow.application.dto.TokenPair;
 import ru.vlad2509.minionflow.application.util.TokenService;
 
-@Path("/auth")
+@Path("/sessions")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class AuthResource {
+public class SessionResource {
 
     @Inject
     AuthService authService;
@@ -30,7 +27,7 @@ public class AuthResource {
     TokenService tokenService;
 
     @POST
-    @Path("/login")
+    @Path("")
     public RestResponse<LoginResponse> login(@Valid LoginRequest request) {
         TokenPair pair = authService.login(request.email(), request.username(), request.password());
 
@@ -68,8 +65,8 @@ public class AuthResource {
                 .build();
     }
 
-    @POST
-    @Path("/logout")
+    @DELETE
+    @Path("/me")
     public RestResponse logout(@Valid RefreshRequest request,
                                @RestCookie("refreshJWT") String refreshJWT) {
         authService.logout(refreshJWT);
@@ -77,8 +74,8 @@ public class AuthResource {
         return RestResponse.ResponseBuilder.noContent().cookie(cookie).build();
     }
 
-    @POST
-    @Path("/logout-all")
+    @DELETE
+    @Path("")
     public RestResponse logoutAll(@Valid RefreshRequest request,
                                   @RestCookie("refreshJWT") String refreshJWT) {
         authService.logoutAll(refreshJWT);
@@ -87,15 +84,15 @@ public class AuthResource {
     }
 
 
-    @Inject
-    PasswordService passwordService;
-
-    @GET
-    @Path("/test")
-    public String hash(@QueryParam("password") String password) {
-        if (password == null)
-            return "";
-        return passwordService.hashNew(password);
-    }
+//    @Inject
+//    PasswordService passwordService;
+//
+//    @GET
+//    @Path("/test")
+//    public String hash(@QueryParam("password") String password) {
+//        if (password == null)
+//            return "";
+//        return passwordService.hashNew(password);
+//    }
 
 }

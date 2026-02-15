@@ -12,15 +12,13 @@ import ru.vlad2509.minionflow.infrastructure.persistence.model.EmailMessageEntit
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.EmailMessageRepository;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ApplicationScoped
 public class EmailService {
-
-    @Inject
-    EmailMessageRepository emailMessageRepository;
-
-    @Inject
-    Mailer mailer;
 
     @ConfigProperty(name = "identity-service.email_batch", defaultValue = "10")
     int batchSize;
@@ -34,6 +32,20 @@ public class EmailService {
     @ConfigProperty(name = "identity-service.email-max-attempts", defaultValue = "5")
     int emailMaxAttempts;
 
+    @ConfigProperty(name = "identity-service.email-sending-pool-size", defaultValue = "5")
+    int poolSize;
+
+
+    @Inject
+    EmailMessageRepository emailMessageRepository;
+
+    @Inject
+    Mailer mailer;
+
+    private final ExecutorService customExecutor = Executors.newFixedThreadPool(poolSize);
+
+    private final AtomicInteger leasedTotal = new AtomicInteger(0);
+
     @Transactional
     public void scheduleSending(String email, String content) {
         EmailMessageEntity entity = new EmailMessageEntity(email, content, emailMaxAttempts);
@@ -42,19 +54,29 @@ public class EmailService {
 
     @Scheduled(every = "5s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     public void sendEmailBatch() {
-        List<EmailMessageEntity> batch = emailMessageRepository.takeMessagePage(batchSize, instanceId, takeEmailLimit);
+        if (leasedTotal.get() > 2 * batchSize)
+            return;
+
+        List<EmailMessageEntity> batch = emailMessageRepository.leaseMessagePage(batchSize, instanceId, takeEmailLimit);
+        leasedTotal.addAndGet(batch.size());
 
         for (EmailMessageEntity message : batch) {
-            SendingResult result = sendEmail(message.email, message.content);
-            switch (result) {
-                case SUCCESS -> emailMessageRepository.markSent(message.id);
-                case IMPOSSIBLE -> emailMessageRepository.markFail(message.id);
-                case UNAVAILABLE -> emailMessageRepository.markTryAgain(message.id, calcDelay(message));
-            }
+            CompletableFuture.supplyAsync(() -> sendEmail(message.email, message.content), customExecutor)
+                    .thenApply(sendingResult -> afterSent(sendingResult, message.id))
+                    .whenComplete((r, e) -> leasedTotal.decrementAndGet());
         }
+    }
 
-        emailMessageRepository.releaseMessagePage(batch);
-
+    @Transactional
+    private SendingResult afterSent(SendingResult result, long messageId) {
+        EmailMessageEntity message = emailMessageRepository.findById(messageId);
+        switch (result) {
+            case SUCCESS -> emailMessageRepository.markSent(messageId);
+            case IMPOSSIBLE -> emailMessageRepository.markFail(message.id);
+            case UNAVAILABLE -> emailMessageRepository.markTryAgain(message.id, calcDelay(message));
+        }
+        emailMessageRepository.releaseMessage(message);
+        return result;
     }
 
     private SendingResult sendEmail(String email, String message) {

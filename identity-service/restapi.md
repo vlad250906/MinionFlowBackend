@@ -1,16 +1,16 @@
 POST /api/auth/login
-body: {email, password}
+body: {email/username, password}
 response: {refreshJWT, accessJWT}
 
 POST /api/auth/refresh
-body: {refreshJWT, ?}
+refreshJWT as cookie
 response: {refreshJWT_new, accessJWT_new}
 
 POST /api/auth/logout
-body: {refreshJWT, ?}
+refreshJWT as cookie
 
 POST /api/auth/logout-all
-body: {refreshJWT, ?}
+refreshJWT as cookie
 
 POST /api/account/register
 body: {email, password, ?}
