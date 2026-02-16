@@ -32,7 +32,7 @@ public class MemberService {
 
 
     @Transactional
-    public void addMember(UserContext context, UUID projectId, UUID userId, MemberRole role) {
+    public ProjectMember addMember(UserContext context, UUID projectId, UUID userId, MemberRole role) {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_MEMBER_ADD_DELETE);
 
         if (memberRepository.findByProjectUserId(projectId, userId).isPresent())
@@ -44,16 +44,19 @@ public class MemberService {
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND));
         Member member = new Member(project, userId, role);
         memberRepository.persist(member);
+
+        return new ProjectMember(projectId, member.userId, member.role.toString(), member.memberSince);
     }
 
     @Transactional
-    public void updateMember(UserContext context, UUID projectId, UUID userId, MemberRole role) {
+    public ProjectMember updateMember(UserContext context, UUID projectId, UUID userId, MemberRole role) {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_MEMBER_UPDATE);
 
         Member member = memberRepository.findByProjectUserId(projectId, context.userId())
                 .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "not a member of project"));
 
         member.role = role;
+        return new ProjectMember(projectId, userId, role.toString(), member.memberSince);
     }
 
     @Transactional
