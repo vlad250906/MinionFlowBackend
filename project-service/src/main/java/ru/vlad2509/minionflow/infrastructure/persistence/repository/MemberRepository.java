@@ -13,19 +13,19 @@ import java.util.UUID;
 public class MemberRepository implements PanacheRepository<Member> {
 
     public Optional<Member> findByProjectUserId(UUID projectId, UUID userId) {
-        return find("project_id = ?1 and user_id = ?2", projectId, userId).singleResultOptional();
+        return find("project.id = ?1 and userId = ?2", projectId, userId).singleResultOptional();
     }
 
     public List<Project> findAllProjects(UUID userId){
-        return find("user_id", userId).stream().map(member -> member.project).toList();
+        return find("userId", userId).stream().map(member -> member.project).toList();
     }
 
     public List<Member> findAllMembers(UUID projectId){
-        return find("project_id", projectId).list();
+        return find("project.id", projectId).list();
     }
 
     public long deleteByProjectUser(UUID projectId, UUID userId) {
-        return delete("project_id = ?1 and user_id = ?2", projectId, userId);
+        return delete("project.id = ?1 and userId = ?2", projectId, userId);
     }
 
 }

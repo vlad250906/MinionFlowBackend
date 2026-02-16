@@ -7,14 +7,12 @@ import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
+import ru.vlad2509.minionflow.api.dto.request.ProjectMemberAddRequest;
+import ru.vlad2509.minionflow.api.dto.request.ProjectMemberUpdateRequest;
 import ru.vlad2509.minionflow.application.MemberService;
 import ru.vlad2509.minionflow.application.TokenService;
 import ru.vlad2509.minionflow.application.dto.ProjectMember;
 import ru.vlad2509.minionflow.api.dto.response.ProjectMemberList;
-import ru.vlad2509.minionflow.api.dto.request.ProjectMemberRequest;
-import ru.vlad2509.minionflow.application.exception.ApiError;
-import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.domain.MemberRole;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,16 +36,16 @@ public class MemberResource {
     @Authenticated
     public ProjectMemberList getMembers(@RestPath("projectId") UUID projectId) {
         List<ProjectMember> members = memberService.getMembers(tokenService.parseJwt(jwt), projectId);
-        return new ProjectMemberList(members.stream().map(
-                pm -> new ProjectMemberRequest(pm.userId(), pm.memberRole(), pm.memberSince())).toList());
+        return new ProjectMemberList(members);
     }
 
     // TODO: Система инвайтов с оповещением по почте??
     @POST
     @Path("")
     @Authenticated
-    public ProjectMember addMember(@RestPath("projectId") UUID projectId, ProjectMemberRequest dto) {
-        return memberService.addMember(tokenService.parseJwt(jwt), projectId, dto.userId(), MemberRole.valueOf(dto.memberRole()));
+    public ProjectMember addMember(@RestPath("projectId") UUID projectId, ProjectMemberAddRequest dto) {
+        // FIXME: преобразование username в userId и проверка!!
+        return memberService.addMember(tokenService.parseJwt(jwt), projectId, UUID.fromString(dto.username()), dto.memberRole());
     }
 
     @GET
@@ -68,8 +66,8 @@ public class MemberResource {
     @PATCH
     @Path("/{userId}")
     @Authenticated
-    public ProjectMember changeMemberRole(@RestPath("projectId") UUID projectId, @PathParam("userId") UUID userId, ProjectMemberRequest dto) {
-        return memberService.updateMember(tokenService.parseJwt(jwt), projectId, userId, MemberRole.valueOf(dto.memberRole()));
+    public ProjectMember changeMemberRole(@RestPath("projectId") UUID projectId, @PathParam("userId") UUID userId, ProjectMemberUpdateRequest dto) {
+        return memberService.updateMember(tokenService.parseJwt(jwt), projectId, userId, dto.memberRole());
     }
 
 }

@@ -52,7 +52,10 @@ public class MemberService {
     public ProjectMember updateMember(UserContext context, UUID projectId, UUID userId, MemberRole role) {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_MEMBER_UPDATE);
 
-        Member member = memberRepository.findByProjectUserId(projectId, context.userId())
+        if (userId.equals(context.userId()) && role != MemberRole.OWNER)
+            throw new ApiException(ApiError.OWNER_LEAVE, "project suicide denied 2.0");
+
+        Member member = memberRepository.findByProjectUserId(projectId, userId)
                 .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "not a member of project"));
 
         member.role = role;
@@ -73,8 +76,8 @@ public class MemberService {
     public ProjectMember getMember(UserContext context, UUID projectId, UUID userId) {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_READ);
 
-        Member member = memberRepository.findByProjectUserId(projectId, context.userId())
-                .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "wow, race condition... idc"));
+        Member member = memberRepository.findByProjectUserId(projectId, userId)
+                .orElseThrow(() -> new ApiException(ApiError.MEMBER_NOT_FOUND));
         return new ProjectMember(projectId, userId, member.role.toString(), member.memberSince);
     }
 

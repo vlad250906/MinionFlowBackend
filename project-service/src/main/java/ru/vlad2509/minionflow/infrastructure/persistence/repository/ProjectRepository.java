@@ -23,4 +23,5 @@ public class ProjectRepository implements PanacheRepository<Project> {
         return delete("id", projectId);
     }
 
+
 }

@@ -2,10 +2,7 @@ package ru.vlad2509.minionflow.api.dto.request;
 
 import ru.vlad2509.minionflow.domain.MemberRole;
 
-import java.time.Instant;
-
-public record ProjectMemberAddRequest(
-        String username,
+public record ProjectMemberUpdateRequest (
         MemberRole memberRole
 ) {
 }

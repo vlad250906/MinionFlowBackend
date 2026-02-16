@@ -48,8 +48,11 @@ public class ProjectService {
     @Transactional
     public ProjectInfo updateProject(UserContext context, UUID projectId, ProjectNameVo projectName, String projectDescription) {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_UPDATE_GENERAL);
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND));
 
+        if (projectRepository.findByName(projectName).isPresent())
+            throw new ApiException(ApiError.PROJECT_ALREADY_EXISTS);
+
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND));
         project.projectName = projectName.value();
         project.projectDescription = projectDescription;
 

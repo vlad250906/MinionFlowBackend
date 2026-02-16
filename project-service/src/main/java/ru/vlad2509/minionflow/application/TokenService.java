@@ -43,7 +43,7 @@ public class TokenService {
     @Transactional
     public void authorize(UserContext userContext, UUID projectId, ProjectPermission... permissions) {
         MemberRole role = memberRepository.findByProjectUserId(projectId, userContext.userId())
-                .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project")).role;
+                .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project or it does not exist")).role;
         if (!Arrays.stream(permissions).allMatch(permission -> role.getPermissions().contains(permission)))
             throw new ApiException(ApiError.INSUFFICIENT_PERMISSION, "not enough permissions");
     }

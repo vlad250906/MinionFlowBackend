@@ -6,6 +6,7 @@ public enum ApiError {
     OWNER_CONFLICT(409, "ownerConflict", "There can not be more than one OWNER in this project"),
     ALREADY_MEMBER(409, "alreadyMember", "User is already member of this project"),
     PROJECT_ALREADY_EXISTS(409, "projectAlreadyExists", "Project with this name already exists"),
+    MEMBER_NOT_FOUND(404, "memberNotFound", "Member of the project not found"),
     PROJECT_NOT_FOUND(404, "projectNotFound", "Project not found"),
     INSUFFICIENT_PERMISSION(403, "insufficientPermission", "Insufficient permissions"),
     UNAUTHORIZED(401, "unauthorized", "Unauthorized"),
