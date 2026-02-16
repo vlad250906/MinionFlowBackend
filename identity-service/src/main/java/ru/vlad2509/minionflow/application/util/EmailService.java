@@ -1,16 +1,13 @@
 package ru.vlad2509.minionflow.application.util;
 
-import io.quarkus.mailer.Mail;
-import io.quarkus.mailer.Mailer;
 import io.quarkus.scheduler.Scheduled;
-import io.vertx.ext.mail.SMTPException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import ru.vlad2509.minionflow.application.port.out.SendingResult;
 import ru.vlad2509.minionflow.application.port.out.SmtpService;
-import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.EmailVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.EmailMessageEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.EmailMessageRepository;
 

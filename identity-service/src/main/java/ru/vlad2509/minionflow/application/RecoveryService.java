@@ -7,7 +7,7 @@ import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.EmailService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
-import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.EmailVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.UserEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.VerificationTicketEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.VerificationTicketType;

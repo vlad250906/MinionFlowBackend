@@ -2,6 +2,13 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    OWNER_LEAVE(409, "leaveImpossible", "Project owner can't leave the project"),
+    OWNER_CONFLICT(409, "ownerConflict", "There can not be more than one OWNER in this project"),
+    ALREADY_MEMBER(409, "alreadyMember", "User is already member of this project"),
+    PROJECT_ALREADY_EXISTS(409, "projectAlreadyExists", "Project with this name already exists"),
+    PROJECT_NOT_FOUND(404, "projectNotFound", "Project not found"),
+    INSUFFICIENT_PERMISSION(403, "insufficientPermission", "Insufficient permissions"),
+    UNAUTHORIZED(401, "unauthorized", "Unauthorized"),
     I_AM_A_TEAPOT(418, "iAmTeaPot", "I am a teapot (WIP)"),
     UNEXPECTED_ERROR(500, "unexpectedError", "Unexpected error");
 

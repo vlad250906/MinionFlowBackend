@@ -2,8 +2,8 @@ package ru.vlad2509.minionflow.infrastructure.persistence.repository;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import ru.vlad2509.minionflow.domain.vo.EmailVo;
-import ru.vlad2509.minionflow.domain.vo.UsernameVo;
+import ru.vlad2509.minionflow.domain.EmailVo;
+import ru.vlad2509.minionflow.domain.UsernameVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.UserEntity;
 
 import java.util.Optional;

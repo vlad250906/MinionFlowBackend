@@ -2,10 +2,11 @@ package ru.vlad2509.minionflow.api.dto.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import ru.vlad2509.minionflow.domain.EmailVo;
+import ru.vlad2509.minionflow.domain.ProjectNameVo;
 
-public record RecoveryBeginRequest(
+public record ProjectInfoRequest(
         @Valid @NotNull
-        EmailVo email
+        ProjectNameVo name,
+        String description
 ) {
 }

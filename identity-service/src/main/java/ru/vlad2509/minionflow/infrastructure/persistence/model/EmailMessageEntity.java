@@ -5,7 +5,7 @@ import java.time.Instant;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.EmailVo;
 
 @Entity
 @Table(name = "email_messages")
