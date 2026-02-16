@@ -2,19 +2,19 @@
 
 CREATE TABLE project_members
 (
-    id          BIGINT       NOT NULL,
-    project_id  UUID         NOT NULL,
-    user_id     UUID         NOT NULL,
-    role        VARCHAR(255) NOT NULL,
+    id          BIGINT                      NOT NULL,
+    project_id  UUID                        NOT NULL,
+    user_id     UUID                        NOT NULL,
+    role        VARCHAR(255)                NOT NULL,
     memberSince TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     CONSTRAINT pk_project_members PRIMARY KEY (id)
 );
 
 CREATE TABLE projects
 (
-    id                 UUID         NOT NULL,
-    projectName        VARCHAR(255) NOT NULL,
-    projectDescription VARCHAR(255) NOT NULL,
+    id                 UUID                        NOT NULL,
+    projectName        VARCHAR(255)                NOT NULL,
+    projectDescription VARCHAR(255)                NOT NULL,
     createdAt          TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     CONSTRAINT pk_projects PRIMARY KEY (id)
 );
