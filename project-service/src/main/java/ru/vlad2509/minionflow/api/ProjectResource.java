@@ -2,22 +2,24 @@ package ru.vlad2509.minionflow.api;
 
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
+import ru.vlad2509.minionflow.api.dto.request.PaginationParams;
 import ru.vlad2509.minionflow.api.dto.request.ProjectInfoRequest;
+import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
 import ru.vlad2509.minionflow.application.ProjectService;
 import ru.vlad2509.minionflow.application.TokenService;
+import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.ProjectInfo;
-import ru.vlad2509.minionflow.api.dto.response.ProjectList;
-import ru.vlad2509.minionflow.application.exception.ApiError;
-import ru.vlad2509.minionflow.application.exception.ApiException;
+import ru.vlad2509.minionflow.application.dto.ProjectInfoShort;
 
 import java.util.UUID;
 
-@Path("/projects")
+@Path("/project-service/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ProjectResource {
@@ -34,8 +36,9 @@ public class ProjectResource {
     @GET
     @Path("")
     @Authenticated
-    public ProjectList getProjects() {
-        return new ProjectList(projectService.getProjects(tokenService.parseJwt(jwt)));
+    public PaginatedResponse<ProjectInfoShort> getProjects(@Valid @BeanParam PaginationParams params) {
+        PaginationContext context = params.toContext();
+        return PaginatedResponse.of(context, projectService.getProjects(context, tokenService.parseJwt(jwt)));
     }
 
     @POST

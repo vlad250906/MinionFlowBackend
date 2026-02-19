@@ -20,7 +20,7 @@ public class TokenService {
     @ConfigProperty(name = "identity-service.jwt-issuer", defaultValue = "https://quarkus.io/issuer")
     String jwtIssuer;
 
-    @ConfigProperty(name = "identity-service.access-jwt-ttl", defaultValue = "300")
+    @ConfigProperty(name = "identity-service.access-jwt-ttl", defaultValue = "1000")
     int accessTokenTtl;
 
     @ConfigProperty(name = "identity-service.refresh-jwt-ttl", defaultValue = "20000")

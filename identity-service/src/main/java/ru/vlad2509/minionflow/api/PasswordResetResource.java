@@ -10,7 +10,7 @@ import ru.vlad2509.minionflow.api.dto.request.RecoveryBeginRequest;
 import ru.vlad2509.minionflow.api.dto.request.RecoveryEndRequest;
 import ru.vlad2509.minionflow.application.RecoveryService;
 
-@Path("/password-resets")
+@Path("/identity-service/api/password-resets")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PasswordResetResource {

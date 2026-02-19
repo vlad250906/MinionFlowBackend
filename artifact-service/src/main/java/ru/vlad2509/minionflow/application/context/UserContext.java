@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.application.dto;
+package ru.vlad2509.minionflow.application.context;
 
 import java.util.UUID;
 

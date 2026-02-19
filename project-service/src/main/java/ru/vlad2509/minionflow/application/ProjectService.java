@@ -3,9 +3,10 @@ package ru.vlad2509.minionflow.application;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.ProjectInfo;
 import ru.vlad2509.minionflow.application.dto.ProjectInfoShort;
-import ru.vlad2509.minionflow.application.dto.UserContext;
+import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.MemberRole;
@@ -73,8 +74,9 @@ public class ProjectService {
         return new ProjectInfo(projectId, project.getProjectName(), project.projectDescription);
     }
 
-    public List<ProjectInfoShort> getProjects(UserContext context) {
-        return memberRepository.findAllProjects(context.userId()).stream().map(project -> new ProjectInfoShort(project.id, project.getProjectName())).toList();
+    public List<ProjectInfoShort> getProjects(PaginationContext paginationContext, UserContext userContext) {
+        return memberRepository.findAllProjects(paginationContext, userContext.userId()).stream()
+                .map(project -> new ProjectInfoShort(project.id, project.getProjectName())).toList();
     }
 
 }

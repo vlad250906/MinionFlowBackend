@@ -15,7 +15,7 @@ import ru.vlad2509.minionflow.application.AuthService;
 import ru.vlad2509.minionflow.application.dto.TokenPair;
 import ru.vlad2509.minionflow.application.util.TokenService;
 
-@Path("/sessions")
+@Path("/identity-service/api/sessions")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class SessionResource {

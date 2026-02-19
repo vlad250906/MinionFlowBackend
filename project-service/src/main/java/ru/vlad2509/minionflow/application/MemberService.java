@@ -3,12 +3,12 @@ package ru.vlad2509.minionflow.application;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.ProjectMember;
-import ru.vlad2509.minionflow.application.dto.UserContext;
+import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.MemberRole;
-import ru.vlad2509.minionflow.domain.ProjectNameVo;
 import ru.vlad2509.minionflow.domain.ProjectPermission;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Member;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Project;
@@ -81,10 +81,10 @@ public class MemberService {
         return new ProjectMember(projectId, userId, member.role.toString(), member.memberSince);
     }
 
-    public List<ProjectMember> getMembers(UserContext context, UUID projectId) {
-        tokenService.authorize(context, projectId, ProjectPermission.PROJECT_READ);
+    public List<ProjectMember> getMembers(PaginationContext paginationContext, UserContext userContext, UUID projectId) {
+        tokenService.authorize(userContext, projectId, ProjectPermission.PROJECT_READ);
 
-        return memberRepository.findAllMembers(projectId).stream()
+        return memberRepository.findAllMembers(paginationContext, projectId).stream()
                 .map(member -> new ProjectMember(projectId, member.userId, member.role.toString(), member.memberSince)).toList();
     }
 

@@ -1,0 +1,115 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      - backend
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_BROWSER_REDIRECT_URL: "https://ripoonchig.me/hiuduwhgyuwyd78wyduwhudw/"
+    command: server /data --console-address ":9001"
+    ports:
+      - "9001:9001"
+    expose:
+      - "9000"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+    networks:
+      - backend
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: minio-init
+    depends_on:
+      - minio
+    networks:
+      - backend
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do
+        echo 'waiting for minio...'; sleep 2;
+      done;
+      mc mb -p local/minionflow || true;
+      echo 'bucket minionflow is ready';
+      "
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+
+  identity-service:
+    build:
+      context: ./identity-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    container_name: identity-service
+    env_file:
+      - ./.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend
+
+  project-service:
+    build:
+      context: ./project-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    container_name: project-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend
+
+  artifact-service:
+    build:
+      context: ./artifact-service
+      dockerfile: src/main/docker/Dockerfile.jvm
+    container_name: artifact-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:

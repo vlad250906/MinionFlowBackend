@@ -7,9 +7,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.domain.MemberRole;
 import ru.vlad2509.minionflow.domain.ProjectPermission;
-import ru.vlad2509.minionflow.infrastructure.persistence.repository.MemberRepository;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -21,7 +19,7 @@ public class TokenService {
     public static String REFRESH_TYPE_JWT = "ref";
 
     @Inject
-    MemberRepository memberRepository;
+    //MemberRepository memberRepository;
 
     public UserContext parseJwt(JsonWebToken jwt) {
         try {
@@ -39,12 +37,13 @@ public class TokenService {
         }
     }
 
+    // TODO: репликация members из project-service сюда, авторизация юзера
     @Transactional
     public void authorize(UserContext userContext, UUID projectId, ProjectPermission... permissions) {
-        MemberRole role = memberRepository.findByProjectUserId(projectId, userContext.userId())
-                .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project or it does not exist")).role;
-        if (!Arrays.stream(permissions).allMatch(permission -> role.getPermissions().contains(permission)))
-            throw new ApiException(ApiError.INSUFFICIENT_PERMISSION, "not enough permissions");
+//        MemberRole role = memberRepository.findByProjectUserId(projectId, userContext.userId())
+//                .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project or it does not exist")).role;
+//        if (!Arrays.stream(permissions).allMatch(permission -> role.getPermissions().contains(permission)))
+//            throw new ApiException(ApiError.INSUFFICIENT_PERMISSION, "not enough permissions");
     }
 
 }

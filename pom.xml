@@ -13,6 +13,7 @@
     <modules>
         <module>identity-service</module>
         <module>project-service</module>
+        <module>artifact-service</module>
     </modules>
 
 </project>
