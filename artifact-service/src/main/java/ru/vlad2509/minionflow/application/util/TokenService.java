@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.application;
+package ru.vlad2509.minionflow.application.util;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -9,7 +9,6 @@ import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.ProjectPermission;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 @ApplicationScoped

@@ -1,6 +1,5 @@
 package ru.vlad2509.minionflow.application;
 
-import io.vertx.codegen.doc.Token;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.StreamingOutput;
@@ -8,6 +7,9 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.ArtifactDto;
+import ru.vlad2509.minionflow.application.util.ArtifactService;
+import ru.vlad2509.minionflow.application.util.StorageKeyFactory;
+import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.domain.ArtifactType;
 import ru.vlad2509.minionflow.domain.ProjectPermission;
 
@@ -23,9 +25,13 @@ public class JarService {
     @Inject
     TokenService tokenService;
 
+    @Inject
+    StorageKeyFactory storageKeyFactory;
+
     public ArtifactDto createJar(UserContext userContext, UUID projectId, String alias, FileUpload file) {
         tokenService.authorize(userContext, projectId, ProjectPermission.JAR_WRITE);
-        return artifactService.createArtifact(userContext, projectId, alias, file, ArtifactType.JAR);
+        return artifactService.createArtifact(userContext, storageKeyFactory.generateJarPrefix(projectId),
+                projectId, alias, file, ArtifactType.JAR);
     }
 
     public ArtifactDto updateJarMetadata(UserContext userContext, UUID projectId, UUID artifactId, String alias) {
@@ -45,12 +51,13 @@ public class JarService {
 
     public List<ArtifactDto> getJars(UserContext userContext, PaginationContext paginationContext, UUID projectId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.JAR_READ);
-        return artifactService.getArtifacts(userContext, paginationContext, projectId);
+        return artifactService.getArtifacts(userContext, paginationContext, projectId, ArtifactType.JAR);
     }
 
     public ArtifactDto updateJarContent(UserContext userContext, UUID projectId, UUID artifactId, FileUpload file) {
         tokenService.authorize(userContext, projectId, ProjectPermission.JAR_WRITE);
-        return artifactService.updateArtifactContent(userContext, projectId, artifactId, file);
+        return artifactService.updateArtifactContent(userContext, storageKeyFactory.generateJarPrefix(projectId),
+                projectId, artifactId, file);
     }
 
     public StreamingOutput downloadJar(UserContext userContext, UUID projectId, UUID artifactId) {

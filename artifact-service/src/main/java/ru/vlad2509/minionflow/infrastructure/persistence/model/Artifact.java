@@ -4,6 +4,8 @@ package ru.vlad2509.minionflow.infrastructure.persistence.model;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import ru.vlad2509.minionflow.domain.ArtifactType;
 
 import java.time.Instant;
@@ -23,9 +25,6 @@ public class Artifact extends PanacheEntityBase {
     public UUID userId;
 
     @Column(nullable = false)
-    public boolean markDeleted;
-
-    @Column(nullable = false)
     public long size;
 
     @Column(nullable = false)
@@ -38,26 +37,22 @@ public class Artifact extends PanacheEntityBase {
     public String contentType;
 
     @Column(nullable = false)
-    public String hashAlgorithm;
-
-    @Column(nullable = false)
-    public String hashValue;
-
-    @Column(nullable = false)
     public Instant createdAt;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     public ArtifactType type;
 
-    @Column(nullable = false)
-    public String storageKey;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "storage_identifier_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT) // storageidentifier может быть удален только если IsUse == 0, противоречие
+    public StorageIdentifier storageIdentifier;
 
     public Artifact() {
     }
 
-    public Artifact(UUID projectId, UUID userId, ArtifactType type, String alias, long size, String originalName, String contentType,
-                    String hashAlgorithm, String hashValue, String storageKey) {
+    public Artifact(UUID projectId, UUID userId, ArtifactType type, String alias, long size, String originalName,
+                    String contentType, StorageIdentifier storageIdentifier) {
         this.projectId = projectId;
         this.userId = userId;
         this.type = type;
@@ -65,12 +60,13 @@ public class Artifact extends PanacheEntityBase {
         this.size = size;
         this.originalName = originalName;
         this.contentType = contentType;
-        this.hashAlgorithm = hashAlgorithm;
-        this.hashValue = hashValue;
-        this.storageKey = storageKey;
+        this.storageIdentifier = storageIdentifier;
 
         this.id = UUID.randomUUID();
-        this.markDeleted = false;
         this.createdAt = Instant.now();
+    }
+
+    public String getStorageKey(){
+        return storageIdentifier.storageKey;
     }
 }

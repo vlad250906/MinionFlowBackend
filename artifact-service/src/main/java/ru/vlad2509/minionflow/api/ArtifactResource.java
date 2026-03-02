@@ -16,12 +16,10 @@ import ru.vlad2509.minionflow.api.dto.request.ArtifactRequest;
 import ru.vlad2509.minionflow.api.dto.request.PaginationParams;
 import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
 import ru.vlad2509.minionflow.application.JarService;
-import ru.vlad2509.minionflow.application.TokenService;
+import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.ArtifactDto;
-import ru.vlad2509.minionflow.application.exception.ApiError;
-import ru.vlad2509.minionflow.application.exception.ApiException;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

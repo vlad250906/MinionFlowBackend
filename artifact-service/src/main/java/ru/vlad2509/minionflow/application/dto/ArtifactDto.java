@@ -13,15 +13,13 @@ public record ArtifactDto(
         String originalName,
         String contentType,
         Instant createdAt,
-        String hashAlgorithm,
-        String hashValue,
         UUID ownerId
 
 ) {
 
     public static ArtifactDto fromJpa(Artifact artifact) {
         return new ArtifactDto(artifact.id, artifact.alias, artifact.size, artifact.originalName, artifact.contentType,
-                artifact.createdAt, artifact.hashAlgorithm, artifact.hashValue, artifact.userId);
+                artifact.createdAt, artifact.userId);
     }
 
 }
