@@ -39,7 +39,7 @@ public class InputService {
 
     public InputArtifactDto createInput(UserContext userContext, UUID projectId, String alias, InputType type, FileUpload file) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
-        ArtifactDto artifact = artifactService.createArtifact(userContext, storageKeyFactory.generateJarPrefix(projectId),
+        ArtifactDto artifact = artifactService.createArtifact(userContext, storageKeyFactory.generateInputPrefix(projectId),
                 projectId, alias, file, ArtifactType.INPUT);
         if (inputArtifactRepository.createInputArtifact(artifact.artifactId(), type) == null)
             throw new ApiException(ApiError.UNEXPECTED_ERROR, "artifact should've been created, but it wasn't");

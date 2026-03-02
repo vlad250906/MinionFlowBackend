@@ -47,7 +47,7 @@ public class InputArtifactRepository implements PanacheRepository<InputArtifact>
 
 
     public Optional<InputArtifact> findByArtifactId(UUID artifactId) {
-        return find("artifact_id", artifactId).singleResultOptional();
+        return find("artifact.id", artifactId).singleResultOptional();
     }
 
     public List<InputArtifact> findAllProjectArtifacts(PaginationContext context, UUID projectId) {

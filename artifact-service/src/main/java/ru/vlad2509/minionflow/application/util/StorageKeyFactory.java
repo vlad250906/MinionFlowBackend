@@ -9,19 +9,19 @@ import java.util.UUID;
 public class StorageKeyFactory {
 
     public String generateJarPrefix(UUID projectId) {
-        return Path.of(projectId.toString(), "jars").toString();
+        return projectId.toString() + "/jars";
     }
 
     public String generateInputPrefix(UUID projectId) {
-        return Path.of(projectId.toString(), "inputs").toString();
+        return projectId.toString() + "/inputs";
     }
 
     public String generateExecutionConfigPrefix(UUID projectId) {
-        return Path.of(projectId.toString(), "executionConfigs").toString();
+        return projectId.toString() + "/executionConfigs";
     }
 
     public String generateOutputsPrefix(UUID projectId, UUID taskId) {
-        return Path.of(projectId.toString(), "tasks", taskId.toString(), "outputs").toString();
+        return projectId.toString() + "/tasks/" + taskId.toString() + "/outputs";
     }
 
 }

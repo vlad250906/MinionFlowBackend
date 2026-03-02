@@ -30,7 +30,7 @@ public class ArtifactService {
 
     public ArtifactDto createArtifact(UserContext userContext, String storageKeyPrefix,
                                       UUID projectId, String alias, FileUpload file, ArtifactType type) {
-        String storageKey = Path.of(storageKeyPrefix, UUID.randomUUID().toString()).toString();
+        String storageKey = storageKeyPrefix + "/" + UUID.randomUUID();
         ArtifactDto dto = createArtifactTransactional(userContext, projectId, alias, file, type, storageKey);
 
         if (!s3Service.upload(storageKey, file)) {
@@ -68,7 +68,7 @@ public class ArtifactService {
 
     public ArtifactDto updateArtifactContent(UserContext userContext, String storageKeyPrefix,
                                              UUID projectId, UUID artifactId, FileUpload file) {
-        String storageKey = Path.of(storageKeyPrefix, UUID.randomUUID().toString()).toString();
+        String storageKey = storageKeyPrefix + "/" + UUID.randomUUID();
 
         if (!s3Service.upload(storageKey, file))
             throw new ApiException(ApiError.S3_UNAVAILABLE);

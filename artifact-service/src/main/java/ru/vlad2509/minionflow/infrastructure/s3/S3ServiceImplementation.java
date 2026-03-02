@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.StreamingOutput;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import org.slf4j.LoggerFactory;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.ports.out.S3Service;
@@ -15,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,8 +31,11 @@ public class S3ServiceImplementation implements S3Service {
     @Inject
     S3Client s3;
 
+    private static final Logger LOG = LoggerFactory.getLogger(S3ServiceImplementation.class);
+
     @Override
     public boolean upload(String key, FileUpload file) {
+        System.out.println(key);
         if (key == null || key.isBlank() || file == null)
             return false;
         Path tmpPath = file.uploadedFile();
@@ -51,6 +56,16 @@ public class S3ServiceImplementation implements S3Service {
 
             s3.putObject(req.build(), RequestBody.fromFile(tmpPath));
             return true;
+        } catch (software.amazon.awssdk.services.s3.model.S3Exception e) {
+            var details = e.awsErrorDetails();
+            LOG.error("S3 putObject failed: status={} code={} message={} requestId={} extRequestId={}",
+                    e.statusCode(),
+                    details != null ? details.errorCode() : null,
+                    details != null ? details.errorMessage() : null,
+                    e.requestId(),
+                    e.extendedRequestId(),
+                    e);
+            return false;
         } catch (SdkException e) {
             e.printStackTrace();
             return false;
