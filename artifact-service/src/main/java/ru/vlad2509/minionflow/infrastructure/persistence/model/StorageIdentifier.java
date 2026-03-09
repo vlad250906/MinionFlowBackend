@@ -18,12 +18,16 @@ public class StorageIdentifier extends PanacheEntityBase {
     @Column(nullable = false)
     public int usedIn;
 
+    @Column(nullable = false)
+    public boolean wasDeleted;
+
     public StorageIdentifier() {
     }
 
     public StorageIdentifier(String storageKey) {
         this.storageKey = storageKey;
 
+        this.wasDeleted = false;
         this.usedIn = 0;
     }
 }

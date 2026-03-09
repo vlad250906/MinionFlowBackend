@@ -12,10 +12,7 @@ import ru.vlad2509.minionflow.application.ports.out.S3Service;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -35,26 +32,30 @@ public class S3ServiceImplementation implements S3Service {
 
     @Override
     public boolean upload(String key, FileUpload file) {
-        System.out.println(key);
-        if (key == null || key.isBlank() || file == null)
+        if (file == null)
             return false;
-        Path tmpPath = file.uploadedFile();
+        return upload(key, file.uploadedFile(), file.contentType());
+    }
+
+    @Override
+    public boolean upload(String key, Path filePath, String contentType) {
+        if (key == null || key.isBlank() || filePath == null)
+            return false;
 
         try {
             PutObjectRequest.Builder req = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key);
 
-            String contentType = file.contentType();
             if (contentType != null && !contentType.isBlank()) {
                 req = req.contentType(contentType);
             }
             try {
-                req = req.contentLength(Files.size(tmpPath));
+                req = req.contentLength(Files.size(filePath));
             } catch (IOException ignored) {
             }
 
-            s3.putObject(req.build(), RequestBody.fromFile(tmpPath));
+            s3.putObject(req.build(), RequestBody.fromFile(filePath));
             return true;
         } catch (software.amazon.awssdk.services.s3.model.S3Exception e) {
             var details = e.awsErrorDetails();
@@ -73,10 +74,22 @@ public class S3ServiceImplementation implements S3Service {
     }
 
     @Override
+    public long getFileSize(String key) {
+        if (key == null || key.isBlank())
+            return -1;
+        try {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder().bucket(bucketName).key(key).build();
+            return s3.headObject(headObjectRequest).contentLength();
+        } catch (S3Exception ex) {
+            ex.printStackTrace();
+            return -1;
+        }
+    }
+
+    @Override
     public StreamingOutput download(String key) {
         if (key == null || key.isBlank())
             throw new ApiException(ApiError.UNEXPECTED_ERROR);
-
         return output -> {
             try (var in = s3.getObject(GetObjectRequest.builder()
                     .bucket(bucketName)

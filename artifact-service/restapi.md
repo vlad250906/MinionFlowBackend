@@ -38,6 +38,7 @@ Tasks (запуски)
 - GET /api/v1/projects/{projectId}/tasks - список запусков (артифакт-ид, артифакт-алиас, входные-ид, входные-алиас, статусы, время выполнения, мб ещё чё=то)
 - GET /api/v1/projects/{projectId}/tasks/{taskId} - получить запуск (всё что есть, агрегированное)
 - PATCH /api/v1/projects/{projectId}/tasks/{taskId} - отмена запуска
-- GET /api/v1/projects/{projectId}/tasks/{taskId}/output - получить вывод
+- GET /api/v1/projects/{projectId}/tasks/{taskId}/output/content - получить вывод (файл)
+- GET /api/v1/projects/{projectId}/inputs/{inputId}/output - получить вывод (метаданные)
 
 // TODO: всё остальное (выходные, логи и т.п.)

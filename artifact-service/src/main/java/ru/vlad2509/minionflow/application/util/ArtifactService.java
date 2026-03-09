@@ -3,6 +3,7 @@ package ru.vlad2509.minionflow.application.util;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.StreamingOutput;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
@@ -38,6 +39,14 @@ public class ArtifactService {
         }
 
         return dto;
+    }
+
+    public ArtifactDto discoverArtifact(String keyPrefix, UUID userId, UUID projectId, String originalFilename) {
+        String key = keyPrefix + "/" + "result.jsonl"; // TODO: сделать листинг хранилища по ключу
+        long size = s3Service.getFileSize(key);
+        if (size < 0)
+            return null;
+        return discoverArtifactTransactional(userId, projectId, size, originalFilename, ArtifactType.OUTPUT, key);
     }
 
     @Transactional
@@ -86,6 +95,14 @@ public class ArtifactService {
                                                    FileUpload file, ArtifactType type, String storageKey) {
         Artifact artifact = artifactRepository.create(projectId, userContext.userId(), type, alias, file.size(),
                 file.fileName(), file.contentType(), storageKey);
+        return ArtifactDto.fromJpa(artifact);
+    }
+
+    @Transactional
+    public ArtifactDto discoverArtifactTransactional(UUID userId, UUID projectId, long fileSize,
+                                                     String originalFilename, ArtifactType type, String storageKey) {
+        Artifact artifact = artifactRepository.create(projectId, userId, type, "missing", fileSize,
+                originalFilename, MediaType.APPLICATION_OCTET_STREAM, storageKey);
         return ArtifactDto.fromJpa(artifact);
     }
 

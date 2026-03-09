@@ -1,6 +1,7 @@
 package ru.vlad2509.minionflow.application.util;
 
 import io.quarkus.scheduler.Scheduled;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -83,6 +84,11 @@ public class EmailService {
 
     private int calcDelay(EmailMessageEntity entity) {
         return (int) Math.max(2, Math.min(300, Math.pow(2, (emailMaxAttempts - entity.attempts))));
+    }
+
+    @PreDestroy
+    private void shutdown() {
+        this.customExecutor.shutdown();
     }
 
 

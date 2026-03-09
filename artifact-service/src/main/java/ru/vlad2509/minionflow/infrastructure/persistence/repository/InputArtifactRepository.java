@@ -50,6 +50,7 @@ public class InputArtifactRepository implements PanacheRepository<InputArtifact>
         return find("artifact.id", artifactId).singleResultOptional();
     }
 
+    // TODO: вот такие штуки могут быть медленными из-за кучи join-ов и количества полей (а нам нужны только некоторые для Light-dto). надо подумать над этим...
     public List<InputArtifact> findAllProjectArtifacts(PaginationContext context, UUID projectId) {
         var query = InputArtifact.find("artifact.projectId", projectId)
                 .page(Page.of(context.getPageIndex(), context.getPageSize()));

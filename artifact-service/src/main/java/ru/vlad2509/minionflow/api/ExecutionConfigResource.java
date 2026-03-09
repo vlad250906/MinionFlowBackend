@@ -14,7 +14,7 @@ import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
 import ru.vlad2509.minionflow.application.ExecutionConfigService;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.ExecutionConfigDto;
-import ru.vlad2509.minionflow.application.dto.ExecutionConfigShort;
+import ru.vlad2509.minionflow.application.dto.light.ExecutionConfigLight;
 import ru.vlad2509.minionflow.application.util.TokenService;
 import java.util.UUID;
 
@@ -35,7 +35,7 @@ public class ExecutionConfigResource {
     @GET
     @Path("")
     @Authenticated
-    public PaginatedResponse<ExecutionConfigShort> getConfigs(@Valid @BeanParam PaginationParams params, @RestPath("projectId") UUID projectId) {
+    public PaginatedResponse<ExecutionConfigLight> getConfigs(@Valid @BeanParam PaginationParams params, @RestPath("projectId") UUID projectId) {
         PaginationContext context = params.toContext();
         return PaginatedResponse.of(context, executionConfigService.getExecutionConfigs(tokenService.parseJwt(jwt), context, projectId));
     }

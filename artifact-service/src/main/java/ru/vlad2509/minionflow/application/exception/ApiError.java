@@ -2,8 +2,12 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    OUTPUT_NOT_READY(409, "outputNotAvailable", "Output is not available for this task"),
     INVALID_EXECUTION_CONFIG(400, "invalidExecutionConfig", "Invalid execution config"),
+    TASK_NOT_FOUND(404, "taskNotFound", "Task run not found"),
     EXECUTION_CONFIG_NOT_FOUND(404, "executionConfigNotFound", "Execution config not found"),
+    INPUT_NOT_FOUND(404, "inputNotFound", "Input artifact not found"),
+    JAR_NOT_FOUND(404, "jarNotFound", "Jar artifact not found"),
     ARTIFACT_NOT_FOUND(404, "artifactNotFound", "Artifact not found"),
     PROJECT_NOT_FOUND(404, "projectNotFound", "Project not found"),
     INSUFFICIENT_PERMISSION(403, "insufficientPermission", "Insufficient permissions"),

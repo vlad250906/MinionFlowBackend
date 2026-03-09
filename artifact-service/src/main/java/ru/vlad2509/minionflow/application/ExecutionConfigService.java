@@ -6,7 +6,7 @@ import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.ExecutionConfigDto;
-import ru.vlad2509.minionflow.application.dto.ExecutionConfigShort;
+import ru.vlad2509.minionflow.application.dto.light.ExecutionConfigLight;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.TokenService;
@@ -67,10 +67,10 @@ public class ExecutionConfigService {
         return ExecutionConfigDto.fromJpa(executionConfigJpa);
     }
 
-    public List<ExecutionConfigShort> getExecutionConfigs(UserContext userContext, PaginationContext paginationContext, UUID projectId) {
+    public List<ExecutionConfigLight> getExecutionConfigs(UserContext userContext, PaginationContext paginationContext, UUID projectId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.CONFIG_READ);
         return executionConfigRepository.findAllProjectConfigs(paginationContext, projectId).stream()
-                .map(ExecutionConfigShort::fromJpa).toList();
+                .map(ExecutionConfigLight::fromJpa).toList();
     }
 
     @Transactional
