@@ -1,10 +1,6 @@
 package ru.vlad2509.minionflow.application.dto;
 
-import ru.vlad2509.minionflow.domain.InputType;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Artifact;
-
-import java.time.Instant;
-import java.util.UUID;
+import ru.vlad2509.minionflow.domain.model.InputType;
 
 public record InputArtifactDto(
         ArtifactDto artifact,

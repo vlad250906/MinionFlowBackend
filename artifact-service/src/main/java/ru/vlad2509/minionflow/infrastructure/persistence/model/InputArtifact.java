@@ -4,7 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import ru.vlad2509.minionflow.domain.InputType;
+import ru.vlad2509.minionflow.domain.model.InputType;
 
 @Entity
 @Table(name = "input_artifacts")

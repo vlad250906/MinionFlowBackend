@@ -10,8 +10,8 @@ import ru.vlad2509.minionflow.application.dto.ArtifactDto;
 import ru.vlad2509.minionflow.application.util.ArtifactService;
 import ru.vlad2509.minionflow.application.util.StorageKeyFactory;
 import ru.vlad2509.minionflow.application.util.TokenService;
-import ru.vlad2509.minionflow.domain.ArtifactType;
-import ru.vlad2509.minionflow.domain.ProjectPermission;
+import ru.vlad2509.minionflow.domain.model.ArtifactType;
+import ru.vlad2509.minionflow.domain.model.ProjectPermission;
 
 import java.util.List;
 import java.util.UUID;

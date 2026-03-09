@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
-import ru.vlad2509.minionflow.domain.InputType;
+import ru.vlad2509.minionflow.domain.model.InputType;
 
 public record InputArtifactRequest(
 

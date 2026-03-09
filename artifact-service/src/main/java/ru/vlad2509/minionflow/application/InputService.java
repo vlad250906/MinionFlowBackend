@@ -13,9 +13,9 @@ import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.ArtifactService;
 import ru.vlad2509.minionflow.application.util.StorageKeyFactory;
 import ru.vlad2509.minionflow.application.util.TokenService;
-import ru.vlad2509.minionflow.domain.ArtifactType;
-import ru.vlad2509.minionflow.domain.InputType;
-import ru.vlad2509.minionflow.domain.ProjectPermission;
+import ru.vlad2509.minionflow.domain.model.ArtifactType;
+import ru.vlad2509.minionflow.domain.model.InputType;
+import ru.vlad2509.minionflow.domain.model.ProjectPermission;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.InputArtifact;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.InputArtifactRepository;
 

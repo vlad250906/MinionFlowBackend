@@ -11,11 +11,10 @@ import ru.vlad2509.minionflow.application.dto.ArtifactDto;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.ports.out.S3Service;
-import ru.vlad2509.minionflow.domain.ArtifactType;
+import ru.vlad2509.minionflow.domain.model.ArtifactType;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Artifact;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.ArtifactRepository;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 

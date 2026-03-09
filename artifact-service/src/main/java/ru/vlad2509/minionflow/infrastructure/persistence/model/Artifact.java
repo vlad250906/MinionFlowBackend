@@ -1,12 +1,11 @@
 package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import ru.vlad2509.minionflow.domain.ArtifactType;
+import ru.vlad2509.minionflow.domain.model.ArtifactType;
 
 import java.time.Instant;
 import java.util.UUID;

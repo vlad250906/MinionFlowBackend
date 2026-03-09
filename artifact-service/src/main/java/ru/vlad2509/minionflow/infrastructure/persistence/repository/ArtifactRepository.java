@@ -6,9 +6,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
-import ru.vlad2509.minionflow.domain.ArtifactType;
+import ru.vlad2509.minionflow.domain.model.ArtifactType;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Artifact;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.InputArtifact;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.StorageIdentifier;
 
 import java.util.List;

@@ -1,17 +1,16 @@
 package ru.vlad2509.minionflow.api.dto.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import ru.vlad2509.minionflow.domain.model.InputType;
+import ru.vlad2509.minionflow.domain.model.execution.ExecutionConfig;
 
-public record InputMetaUpdateRequest(
-
+public record ExecutionConfigRequest (
         @NotBlank
         @Size(min = 1, max = 100)
         String alias,
 
-        @NotNull
-        InputType inputType
+        @Valid
+        ExecutionConfig config
 ) {
 }

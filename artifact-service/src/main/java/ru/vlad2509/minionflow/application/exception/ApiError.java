@@ -2,6 +2,8 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    INVALID_EXECUTION_CONFIG(400, "invalidExecutionConfig", "Invalid execution config"),
+    EXECUTION_CONFIG_NOT_FOUND(404, "executionConfigNotFound", "Execution config not found"),
     ARTIFACT_NOT_FOUND(404, "artifactNotFound", "Artifact not found"),
     PROJECT_NOT_FOUND(404, "projectNotFound", "Project not found"),
     INSUFFICIENT_PERMISSION(403, "insufficientPermission", "Insufficient permissions"),
