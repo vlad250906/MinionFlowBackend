@@ -5,6 +5,7 @@ target/
 .kotlin
 
 *.pem
+*.env
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
