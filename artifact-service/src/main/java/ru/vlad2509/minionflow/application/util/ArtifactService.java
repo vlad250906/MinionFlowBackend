@@ -16,6 +16,7 @@ import ru.vlad2509.minionflow.domain.model.ArtifactType;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Artifact;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.ArtifactRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,9 +30,9 @@ public class ArtifactService {
     S3Service s3Service;
 
     public ArtifactDto createArtifact(UserContext userContext, String storageKeyPrefix,
-                                      UUID projectId, String alias, FileUpload file, ArtifactType type) {
+                                      UUID projectId, FileUpload file, ArtifactType type) {
         String storageKey = storageKeyPrefix + "/" + UUID.randomUUID();
-        ArtifactDto dto = createArtifactTransactional(userContext, projectId, alias, file, type, storageKey);
+        ArtifactDto dto = createArtifactTransactional(userContext, projectId, file, type, storageKey);
 
         if (!s3Service.upload(storageKey, file)) {
             artifactRepository.delete(dto.artifactId());
@@ -41,19 +42,9 @@ public class ArtifactService {
         return dto;
     }
 
-    public ArtifactDto discoverArtifact(String keyPrefix, UUID userId, UUID projectId, String originalFilename) {
-        String key = keyPrefix + "/" + "result.jsonl"; // TODO: сделать листинг хранилища по ключу
-        long size = s3Service.getFileSize(key);
-        if (size < 0)
-            return null;
-        return discoverArtifactTransactional(userId, projectId, size, originalFilename, ArtifactType.OUTPUT, key);
-    }
-
-    @Transactional
-    public ArtifactDto updateArtifactMetadata(UserContext userContext, UUID artifactId, String alias) {
-        Artifact artifact = artifactRepository.findById(artifactId).orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND));
-        artifact.alias = alias;
-        return ArtifactDto.fromJpa(artifact);
+    public List<ArtifactDto> discoverArtifact(String keyPrefix, UUID userId, UUID projectId) {
+        List<S3Service.S3Object> artifacts = s3Service.enumerateFiles(keyPrefix);
+        return discoverArtifactsTransactional(userId, projectId, artifacts);
     }
 
     @Transactional
@@ -91,19 +82,24 @@ public class ArtifactService {
     }
 
     @Transactional
-    public ArtifactDto createArtifactTransactional(UserContext userContext, UUID projectId, String alias,
+    public ArtifactDto createArtifactTransactional(UserContext userContext, UUID projectId,
                                                    FileUpload file, ArtifactType type, String storageKey) {
-        Artifact artifact = artifactRepository.create(projectId, userContext.userId(), type, alias, file.size(),
+        Artifact artifact = artifactRepository.create(projectId, userContext.userId(), type, file.size(),
                 file.fileName(), file.contentType(), storageKey);
         return ArtifactDto.fromJpa(artifact);
     }
 
     @Transactional
-    public ArtifactDto discoverArtifactTransactional(UUID userId, UUID projectId, long fileSize,
-                                                     String originalFilename, ArtifactType type, String storageKey) {
-        Artifact artifact = artifactRepository.create(projectId, userId, type, "missing", fileSize,
-                originalFilename, MediaType.APPLICATION_OCTET_STREAM, storageKey);
-        return ArtifactDto.fromJpa(artifact);
+    public List<ArtifactDto> discoverArtifactsTransactional(UUID userId, UUID projectId, List<S3Service.S3Object> artifacts) {
+        List<ArtifactDto> result = new ArrayList<>();
+        for (S3Service.S3Object object : artifacts) {
+            String[] chunks = object.key().split("/");
+            String filename = chunks[chunks.length - 1];
+            Artifact artifact = artifactRepository.create(projectId, userId, ArtifactType.OUTPUT, object.size(), filename, MediaType.APPLICATION_OCTET_STREAM, object.key());
+            result.add(ArtifactDto.fromJpa(artifact));
+        }
+
+        return result;
     }
 
     @Transactional

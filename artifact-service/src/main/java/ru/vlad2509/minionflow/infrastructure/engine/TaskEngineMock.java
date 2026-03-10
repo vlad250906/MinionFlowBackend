@@ -51,8 +51,10 @@ public class TaskEngineMock implements TaskEngine {
         CompletableFuture.runAsync(() -> {
             try {
                 simulateLifecycle(taskRun.id, taskRun.projectId);
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (InterruptedException ignore) {
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }, customExecutor);
     }
@@ -103,7 +105,7 @@ public class TaskEngineMock implements TaskEngine {
             File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".jsonl");
 
             FileOutputStream fos = new FileOutputStream(tmpFile);
-            fos.write(new String("This is an mock output for task with id = "+taskId).getBytes());
+            fos.write(new String("This is a mock output for task with id = " + taskId).getBytes());
             fos.close();
 
             String key = storageKeyFactory.generateOutputsPrefix(projectId, taskId) + "/" + "result.jsonl";

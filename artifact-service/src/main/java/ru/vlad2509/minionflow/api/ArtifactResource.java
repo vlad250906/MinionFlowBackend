@@ -16,6 +16,7 @@ import ru.vlad2509.minionflow.api.dto.request.ArtifactRequest;
 import ru.vlad2509.minionflow.api.dto.request.PaginationParams;
 import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
 import ru.vlad2509.minionflow.application.JarService;
+import ru.vlad2509.minionflow.application.dto.JarArtifactDto;
 import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.context.UserContext;
@@ -42,7 +43,7 @@ public class ArtifactResource {
     @GET
     @Path("")
     @Authenticated
-    public PaginatedResponse<ArtifactDto> getArtifacts(@Valid @BeanParam PaginationParams params, @RestPath("projectId") UUID projectId) {
+    public PaginatedResponse<JarArtifactDto> getArtifacts(@Valid @BeanParam PaginationParams params, @RestPath("projectId") UUID projectId) {
         PaginationContext context = params.toContext();
         return PaginatedResponse.of(context, jarService.getJars(tokenService.parseJwt(jwt), context, projectId));
     }
@@ -51,14 +52,14 @@ public class ArtifactResource {
     @Path("")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authenticated
-    public ArtifactDto createArtifact(@Valid ArtifactRequest request, @RestPath("projectId") UUID projectId) {
+    public JarArtifactDto createArtifact(@Valid ArtifactRequest request, @RestPath("projectId") UUID projectId) {
         return jarService.createJar(tokenService.parseJwt(jwt), projectId, request.alias(), request.file());
     }
 
     @GET
     @Path("/{artifactId}")
     @Authenticated
-    public ArtifactDto getArtifactMetadata(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId) {
+    public JarArtifactDto getArtifactMetadata(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId) {
         return jarService.getJarMetadata(tokenService.parseJwt(jwt), projectId, jarId);
     }
 
@@ -73,7 +74,7 @@ public class ArtifactResource {
     @PATCH
     @Path("/{artifactId}")
     @Authenticated
-    public ArtifactDto updateArtifactMetadata(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId, String newAlias) {
+    public JarArtifactDto updateArtifactMetadata(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId, String newAlias) {
         return jarService.updateJarMetadata(tokenService.parseJwt(jwt), projectId, jarId, newAlias);
     }
 
@@ -82,7 +83,7 @@ public class ArtifactResource {
     @Authenticated
     public Response getArtifactContent(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId) {
         UserContext context = tokenService.parseJwt(jwt);
-        ArtifactDto dto = jarService.getJarMetadata(context, projectId, jarId);
+        ArtifactDto dto = jarService.getJarMetadata(context, projectId, jarId).artifact();
         StreamingOutput stream = jarService.downloadJar(context, projectId, jarId);
 
         String filename = dto.originalName().isBlank() ? "undefined.jar" : dto.originalName();
@@ -99,7 +100,7 @@ public class ArtifactResource {
     @Path("/{artifactId}/content")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authenticated
-    public ArtifactDto updateArtifactContent(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId, @RestForm("file") FileUpload file) {
+    public JarArtifactDto updateArtifactContent(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId, @RestForm("file") FileUpload file) {
         return jarService.updateJarContent(tokenService.parseJwt(jwt), projectId, jarId, file);
     }
 

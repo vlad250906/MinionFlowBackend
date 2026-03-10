@@ -27,9 +27,6 @@ public class Artifact extends PanacheEntityBase {
     public long size;
 
     @Column(nullable = false)
-    public String alias;
-
-    @Column(nullable = false)
     public String originalName;
 
     @Column(nullable = false)
@@ -50,12 +47,11 @@ public class Artifact extends PanacheEntityBase {
     public Artifact() {
     }
 
-    public Artifact(UUID projectId, UUID userId, ArtifactType type, String alias, long size, String originalName,
+    public Artifact(UUID projectId, UUID userId, ArtifactType type, long size, String originalName,
                     String contentType, StorageIdentifier storageIdentifier) {
         this.projectId = projectId;
         this.userId = userId;
         this.type = type;
-        this.alias = alias;
         this.size = size;
         this.originalName = originalName;
         this.contentType = contentType;

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 @ApplicationScoped
 public class S3ServiceImplementation implements S3Service {
@@ -74,17 +75,22 @@ public class S3ServiceImplementation implements S3Service {
     }
 
     @Override
-    public long getFileSize(String key) {
-        if (key == null || key.isBlank())
-            return -1;
+    public List<S3Object> enumerateFiles(String prefix) {
+        if (prefix == null || prefix.isBlank())
+            return List.of();
         try {
-            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder().bucket(bucketName).key(key).build();
-            return s3.headObject(headObjectRequest).contentLength();
+            ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(bucketName).prefix(prefix).build();
+            return s3.listObjectsV2Paginator(request)
+                    .stream()
+                    .flatMap(resp -> resp.contents().stream())
+                    .map(obj -> new S3Object(obj.key(), obj.size()))
+                    .toList();
         } catch (S3Exception ex) {
             ex.printStackTrace();
-            return -1;
+            return List.of();
         }
     }
+
 
     @Override
     public StreamingOutput download(String key) {

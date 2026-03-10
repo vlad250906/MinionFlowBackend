@@ -5,6 +5,7 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.List;
 
 public interface S3Service {
 
@@ -12,10 +13,14 @@ public interface S3Service {
 
     boolean upload(String key, Path filePath, String contentType);
 
-    long getFileSize(String key);
+    List<S3Object> enumerateFiles(String prefix);
 
     StreamingOutput download(String key);
 
     boolean delete(String key);
+
+
+    record S3Object(String key, long size){
+    }
 
 }

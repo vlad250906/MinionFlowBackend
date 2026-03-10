@@ -25,9 +25,9 @@ public class ArtifactRepository implements PanacheRepository<Artifact> {
     }
 
     @Transactional
-    public Artifact create(UUID projectId, UUID userId, ArtifactType type, String alias, long size, String originalName,
+    public Artifact create(UUID projectId, UUID userId, ArtifactType type, long size, String originalName,
                            String contentType, String storageKey) {
-        Artifact artifact = new Artifact(projectId, userId, type, alias, size,
+        Artifact artifact = new Artifact(projectId, userId, type, size,
                 originalName, contentType, storageIdentifierRepository.create(storageKey));
         this.persist(artifact);
         return artifact;

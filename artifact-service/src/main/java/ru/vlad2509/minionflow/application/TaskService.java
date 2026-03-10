@@ -20,14 +20,8 @@ import ru.vlad2509.minionflow.application.util.StorageKeyFactory;
 import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.domain.model.ProjectPermission;
 import ru.vlad2509.minionflow.domain.model.TaskStatus;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Artifact;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.ExecutionConfigJpa;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.InputArtifact;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.TaskRun;
-import ru.vlad2509.minionflow.infrastructure.persistence.repository.ArtifactRepository;
-import ru.vlad2509.minionflow.infrastructure.persistence.repository.ExecutionConfigRepository;
-import ru.vlad2509.minionflow.infrastructure.persistence.repository.InputArtifactRepository;
-import ru.vlad2509.minionflow.infrastructure.persistence.repository.TaskRunRepository;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.*;
+import ru.vlad2509.minionflow.infrastructure.persistence.repository.*;
 import ru.vlad2509.minionflow.infrastructure.s3.S3ServiceImplementation;
 
 import javax.swing.text.html.Option;
@@ -46,7 +40,7 @@ public class TaskService {
     TaskRunRepository taskRunRepository;
 
     @Inject
-    ArtifactRepository artifactRepository;
+    JarArtifactRepository jarArtifactRepository;
 
     @Inject
     InputArtifactRepository inputArtifactRepository;
@@ -90,15 +84,22 @@ public class TaskService {
     }
 
     @Transactional
-    public ArtifactDto getOutputMetadata(UserContext userContext, UUID projectId, UUID taskRunId) {
+    public List<ArtifactDto> getOutputs(UserContext userContext, UUID projectId, UUID taskId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.OUTPUT_READ);
-        return artifactService.getArtifactMetadata(userContext, getOutputId(taskRunId));
+        TaskRun taskRun = taskRunRepository.findById(taskId).orElseThrow(() -> new ApiException(ApiError.TASK_NOT_FOUND));
+        return taskRun.outputs.stream().map(ArtifactDto::fromJpa).toList();
     }
 
     @Transactional
-    public StreamingOutput getOutputContent(UserContext userContext, UUID projectId, UUID taskRunId) {
+    public ArtifactDto getOutputMetadata(UserContext userContext, UUID projectId, UUID taskRunId, UUID outputId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.OUTPUT_READ);
-        return artifactService.downloadArtifact(userContext, getOutputId(taskRunId));
+        return artifactService.getArtifactMetadata(userContext, outputId);
+    }
+
+    @Transactional
+    public StreamingOutput getOutputContent(UserContext userContext, UUID projectId, UUID taskRunId, UUID outputId) {
+        tokenService.authorize(userContext, projectId, ProjectPermission.OUTPUT_READ);
+        return artifactService.downloadArtifact(userContext, outputId);
     }
 
     public void onStatusChange(UUID taskId, TaskStatus newStatus) {
@@ -112,23 +113,18 @@ public class TaskService {
         Optional<ArtifactContext> artifactContextOptional = loadArtifactContext(taskId);
         if (artifactContextOptional.isPresent()) {
             ArtifactContext ctx = artifactContextOptional.get();
-            ArtifactDto dto = artifactService.discoverArtifact(
+            List<UUID> artifactIds = artifactService.discoverArtifact(
                     storageKeyFactory.generateOutputsPrefix(ctx.projectId(), taskId),
                     ctx.userId(),
-                    ctx.projectId(),
-                    "result.jsonl"
-            );
-            setTaskOutput(taskId, dto == null ? null : dto.artifactId());
+                    ctx.projectId()
+            ).stream().map(ArtifactDto::artifactId).toList();
+            setTaskOutput(taskId, artifactIds);
         }
     }
 
     @Transactional
-    void setTaskOutput(UUID taskId, UUID artifactId) {
-        TaskRun task = taskRunRepository.findById(taskId).orElse(null);
-        Artifact artifact = artifactRepository.findById(artifactId).orElse(null);
-        if (task == null || artifact == null)
-            return;
-        task.outputJpa = artifact;
+    void setTaskOutput(UUID taskId, List<UUID> artifactId) {
+        taskRunRepository.updateOutputs(taskId, artifactId);
     }
 
     @Transactional
@@ -152,22 +148,13 @@ public class TaskService {
     record ArtifactContext(UUID userId, UUID projectId) {
     }
 
-    private UUID getOutputId(UUID taskRunId) {
-        TaskRun task = taskRunRepository.findById(taskRunId).orElseThrow(() -> new ApiException(ApiError.TASK_NOT_FOUND));
-        if (task.status != TaskStatus.DONE)
-            throw new ApiException(ApiError.OUTPUT_NOT_READY, "wrong status: " + task.status);
-        if (task.outputJpa == null)
-            throw new ApiException(ApiError.OUTPUT_NOT_READY, "something went terribly wrong: task is DONE, while the output is missing");
-        return task.outputJpa.id;
-    }
-
     @Transactional
     TaskRun createTaskRunTransactional(UserContext userContext, UUID projectId, UUID jarId, UUID inputId, UUID configId) {
-        Artifact jar = artifactRepository.findById(jarId).orElseThrow(() -> new ApiException(ApiError.JAR_NOT_FOUND));
+        JarArtifact jar = jarArtifactRepository.findByArtifactId(jarId).orElseThrow(() -> new ApiException(ApiError.JAR_NOT_FOUND));
         InputArtifact input = inputArtifactRepository.findByArtifactId(inputId).orElseThrow(() -> new ApiException(ApiError.INPUT_NOT_FOUND));
         ExecutionConfigJpa executionConfig = executionConfigRepository.findById(configId).orElseThrow(() -> new ApiException(ApiError.EXECUTION_CONFIG_NOT_FOUND));
 
-        TaskRun taskRun = new TaskRun(projectId, userContext.userId(), jar.storageIdentifier, input.artifact.storageIdentifier, jar, input, executionConfig);
+        TaskRun taskRun = new TaskRun(projectId, userContext.userId(), jar.artifact.storageIdentifier, input.artifact.storageIdentifier, jar, input, executionConfig);
         taskRunRepository.persist(taskRun);
         return taskRun;
     }

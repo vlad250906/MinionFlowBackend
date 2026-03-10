@@ -7,8 +7,8 @@ import org.hibernate.annotations.OnDeleteAction;
 import ru.vlad2509.minionflow.domain.model.InputType;
 
 @Entity
-@Table(name = "input_artifacts")
-public class InputArtifact extends PanacheEntityBase {
+@Table(name = "jar_artifacts")
+public class JarArtifact extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,16 +22,11 @@ public class InputArtifact extends PanacheEntityBase {
     @Column(nullable = false)
     public String alias;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    public InputType type;
-
-    public InputArtifact() {
+    public JarArtifact() {
     }
 
-    public InputArtifact(Artifact artifact, String alias, InputType type) {
+    public JarArtifact(Artifact artifact, String alias) {
         this.artifact = artifact;
         this.alias = alias;
-        this.type = type;
     }
 }

@@ -2,9 +2,13 @@ package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import ru.vlad2509.minionflow.domain.model.TaskStatus;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -26,27 +30,36 @@ public class TaskRun extends PanacheEntityBase {
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "jar_artifact_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     public StorageIdentifier jarArtifact;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "input_artifact_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     public StorageIdentifier inputArtifact;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "jar_jpa_id", nullable = true)
-    public Artifact jarJpa;
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    public JarArtifact jarJpa;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "input_jpa_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     public InputArtifact inputJpa;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "execution_config_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     public ExecutionConfigJpa executionConfig;
 
-    @ManyToOne(optional = true)
-    @JoinColumn(name = "output_jpa_id", nullable = true)
-    public Artifact outputJpa;
+    @ManyToMany
+    @JoinTable(
+            name = "task-run_artifact",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "output_id")
+    )
+    public Set<Artifact> outputs = new HashSet<Artifact>();
 
     @Column(nullable = false)
     public Instant createdAt;
@@ -64,7 +77,7 @@ public class TaskRun extends PanacheEntityBase {
     }
 
     public TaskRun(UUID projectId, UUID userId, StorageIdentifier jarArtifact, StorageIdentifier inputArtifact,
-                   Artifact jarJpa, InputArtifact inputJpa, ExecutionConfigJpa executionConfig) {
+                   JarArtifact jarJpa, InputArtifact inputJpa, ExecutionConfigJpa executionConfig) {
 
         this.projectId = projectId;
         this.userId = userId;
@@ -76,7 +89,6 @@ public class TaskRun extends PanacheEntityBase {
 
         this.id = UUID.randomUUID();
         this.status = TaskStatus.CREATED;
-        this.outputJpa = null;
         this.createdAt = Instant.now();
         this.startedAt = null;
         this.finishedAt = null;

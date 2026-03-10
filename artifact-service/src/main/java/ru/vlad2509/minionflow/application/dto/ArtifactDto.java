@@ -8,7 +8,6 @@ import java.util.UUID;
 public record ArtifactDto(
 
         UUID artifactId,
-        String alias,
         long size,
         String originalName,
         String contentType,
@@ -18,7 +17,7 @@ public record ArtifactDto(
 ) {
 
     public static ArtifactDto fromJpa(Artifact artifact) {
-        return new ArtifactDto(artifact.id, artifact.alias, artifact.size, artifact.originalName, artifact.contentType,
+        return new ArtifactDto(artifact.id, artifact.size, artifact.originalName, artifact.contentType,
                 artifact.createdAt, artifact.userId);
     }
 

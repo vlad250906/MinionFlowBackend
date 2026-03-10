@@ -40,19 +40,18 @@ public class InputService {
     public InputArtifactDto createInput(UserContext userContext, UUID projectId, String alias, InputType type, FileUpload file) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
         ArtifactDto artifact = artifactService.createArtifact(userContext, storageKeyFactory.generateInputPrefix(projectId),
-                projectId, alias, file, ArtifactType.INPUT);
-        if (inputArtifactRepository.createInputArtifact(artifact.artifactId(), type) == null)
+                projectId, file, ArtifactType.INPUT);
+        if (inputArtifactRepository.createInputArtifact(artifact.artifactId(), alias, type) == null)
             throw new ApiException(ApiError.UNEXPECTED_ERROR, "artifact should've been created, but it wasn't");
-        return InputArtifactDto.fromDto(artifact, type);
+        return InputArtifactDto.fromDto(artifact, alias, type);
     }
 
     public InputArtifactDto updateInputMetadata(UserContext userContext, UUID projectId, UUID artifactId,
                                                 String alias, InputType type) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
-        ArtifactDto artifact = artifactService.updateArtifactMetadata(userContext, artifactId, alias);
-        if (!inputArtifactRepository.updateType(artifactId, type))
-            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "it should've been found, possible desync or bug??");
-        return InputArtifactDto.fromDto(artifact, type);
+        InputArtifact inputArtifact = inputArtifactRepository.update(artifactId, alias, type)
+                .orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "it should've been found, possible desync or bug??"));
+        return InputArtifactDto.fromDto(ArtifactDto.fromJpa(inputArtifact.artifact), inputArtifact.alias, inputArtifact.type);
     }
 
     public void deleteInput(UserContext userContext, UUID projectId, UUID artifactId) {
@@ -66,13 +65,13 @@ public class InputService {
         InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId).orElseThrow(
                 () -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "it should've been found, possible desync or bug??"));
 
-        return InputArtifactDto.fromDto(dto, inputArtifact.type);
+        return InputArtifactDto.fromDto(dto, inputArtifact.alias, inputArtifact.type);
     }
 
     public List<InputArtifactDto> getInputs(UserContext userContext, PaginationContext paginationContext, UUID projectId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_READ);
         return inputArtifactRepository.findAllProjectArtifacts(paginationContext, projectId).stream()
-                .map(ia -> InputArtifactDto.fromDto(ArtifactDto.fromJpa(ia.artifact), ia.type)).toList();
+                .map(ia -> InputArtifactDto.fromDto(ArtifactDto.fromJpa(ia.artifact), ia.alias, ia.type)).toList();
     }
 
     public InputArtifactDto updateInputContent(UserContext userContext, UUID projectId, UUID artifactId, FileUpload file) {
@@ -81,7 +80,7 @@ public class InputService {
                 projectId, artifactId, file);
         InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId).orElseThrow(
                 () -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "it should've been found, possible desync or bug??"));
-        return InputArtifactDto.fromDto(dto, inputArtifact.type);
+        return InputArtifactDto.fromDto(dto, inputArtifact.alias, inputArtifact.type);
     }
 
     public StreamingOutput downloadInput(UserContext userContext, UUID projectId, UUID artifactId) {

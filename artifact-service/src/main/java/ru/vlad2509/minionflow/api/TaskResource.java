@@ -14,6 +14,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import ru.vlad2509.minionflow.api.dto.request.ArtifactRequest;
 import ru.vlad2509.minionflow.api.dto.request.PaginationParams;
 import ru.vlad2509.minionflow.api.dto.request.TaskCreateRequest;
+import ru.vlad2509.minionflow.api.dto.response.OutputList;
 import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
 import ru.vlad2509.minionflow.application.JarService;
 import ru.vlad2509.minionflow.application.TaskService;
@@ -76,28 +77,12 @@ public class TaskResource {
     }
 
     @GET
-    @Path("/{taskId}/output")
+    @Path("/{taskId}/outputs")
     @Authenticated
-    public ArtifactDto getTaskOutputMeta(@RestPath("projectId") UUID projectId, @RestPath("taskId") UUID taskId) {
-        return taskService.getOutputMetadata(tokenService.parseJwt(jwt), projectId, taskId);
+    public OutputList getOutputs(@RestPath("projectId") UUID projectId,
+                                 @RestPath("taskId") UUID taskId) {
+        return new OutputList(taskService.getOutputs(tokenService.parseJwt(jwt), projectId, taskId));
     }
 
-    @GET
-    @Path("/{taskId}/output/content")
-    @Authenticated
-    public Response getTaskOutputContent(@RestPath("projectId") UUID projectId, @RestPath("taskId") UUID taskId) {
-        UserContext context = tokenService.parseJwt(jwt);
-        ArtifactDto dto = taskService.getOutputMetadata(context, projectId, taskId);
-        StreamingOutput stream = taskService.getOutputContent(context, projectId, taskId);
-
-        String filename = dto.originalName().isBlank() ? "undefined.jsonl" : dto.originalName();
-        String encoded = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-        String contentType = dto.contentType().isBlank() ? "application/octet-stream" : dto.contentType();
-
-        return Response.ok(stream)
-                .header("Content-Type", contentType)
-                .header("Content-Disposition", "attachment; filename*=UTF-8''" + encoded)
-                .build();
-    }
 
 }
