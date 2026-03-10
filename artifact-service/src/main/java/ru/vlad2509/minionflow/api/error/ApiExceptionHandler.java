@@ -18,6 +18,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 
@@ -31,40 +32,40 @@ public class ApiExceptionHandler {
     private static final String PROBLEM_JSON = "application/problem+json";
 
     @ServerExceptionMapper
-    public Response mapUnauthorized(AuthenticationFailedException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapUnauthorized(AuthenticationFailedException ex, UriInfo uriInfo, ContainerRequestContext req) {
         //ex.printStackTrace();
         return build(401, "unauthorized", "Unauthorized", "Incorrect Bearer JWT", uriInfo, req, null);
     }
 
 
     @ServerExceptionMapper
-    public Response mapJsonParse(JsonParseException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapJsonParse(JsonParseException ex, UriInfo uriInfo, ContainerRequestContext req) {
         return build(400, "invalidJson", "Invalid JSON", ex.getOriginalMessage(), uriInfo, req, null);
     }
 
     @ServerExceptionMapper
-    public Response mapMismatched(MismatchedInputException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapMismatched(MismatchedInputException ex, UriInfo uriInfo, ContainerRequestContext req) {
         return build(400, "invalidJson", "Invalid JSON", ex.getOriginalMessage(), uriInfo, req, null);
     }
 
     // на всякий — общий Jackson mapping
     @ServerExceptionMapper
-    public Response mapJsonMapping(JsonMappingException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapJsonMapping(JsonMappingException ex, UriInfo uriInfo, ContainerRequestContext req) {
         return build(400, "invalidJson", "Invalid JSON", ex.getOriginalMessage(), uriInfo, req, null);
     }
 
     @ServerExceptionMapper
-    public Response mapApi(ApiException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapApi(ApiException ex, UriInfo uriInfo, ContainerRequestContext req) {
         return build(ex.getHttpStatusCode(), ex.getErrorCode(), "Request failed", ex.getMessage(), uriInfo, req, null);
     }
 
     @ServerExceptionMapper
-    public Response mapNotFound(NotFoundException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapNotFound(NotFoundException ex, UriInfo uriInfo, ContainerRequestContext req) {
         return build(404, "notFound", "Not Found", ex.getMessage(), uriInfo, req, null);
     }
 
     @ServerExceptionMapper
-    public Response mapWeb(WebApplicationException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapWeb(WebApplicationException ex, UriInfo uriInfo, ContainerRequestContext req) {
         int status = ex.getResponse() != null ? ex.getResponse().getStatus() : 500;
 
         // FIXME: костыль + тут можно случайно раскрыть лишние тех. данные
@@ -80,21 +81,21 @@ public class ApiExceptionHandler {
     }
 
     @ServerExceptionMapper
-    public Response mapResteasyReactiveViolation(ResteasyReactiveViolationException ex,
+    public RestResponse<ApiErrorResponse> mapResteasyReactiveViolation(ResteasyReactiveViolationException ex,
                                                  UriInfo uriInfo,
                                                  ContainerRequestContext req) {
         return validationResponse(ex, uriInfo, req);
     }
 
     @ServerExceptionMapper
-    public Response mapConstraintViolation(ConstraintViolationException ex,
+    public RestResponse<ApiErrorResponse> mapConstraintViolation(ConstraintViolationException ex,
                                            UriInfo uriInfo,
                                            ContainerRequestContext req) {
         return validationResponse(ex, uriInfo, req);
     }
 
     @ServerExceptionMapper
-    public Response mapAny(Throwable ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapAny(Throwable ex, UriInfo uriInfo, ContainerRequestContext req) {
         LOG.error("Unhandled error", ex);
 
         return build(
@@ -108,7 +109,7 @@ public class ApiExceptionHandler {
         );
     }
 
-    private Response validationResponse(ConstraintViolationException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    private RestResponse<ApiErrorResponse> validationResponse(ConstraintViolationException ex, UriInfo uriInfo, ContainerRequestContext req) {
         List<ApiErrorResponse.FieldError> errors = ex.getConstraintViolations().stream()
                 .map(ApiExceptionHandler::toFieldError)
                 .toList();
@@ -130,7 +131,7 @@ public class ApiExceptionHandler {
         return new ApiErrorResponse.FieldError(field, msg);
     }
 
-    private Response build(int status,
+    private RestResponse<ApiErrorResponse> build(int status,
                            String code,
                            String title,
                            String detail,
@@ -147,9 +148,11 @@ public class ApiExceptionHandler {
                 (errors == null || errors.isEmpty()) ? null : errors
         );
 
-        return Response.status(status)
+        Response.Status responseStatus = Response.Status.fromStatusCode(status);
+
+        return RestResponse.ResponseBuilder
+                .create(responseStatus == null ? RestResponse.Status.INTERNAL_SERVER_ERROR : responseStatus, body)
                 .type(MediaType.valueOf(PROBLEM_JSON))
-                .entity(body)
                 .build();
     }
 

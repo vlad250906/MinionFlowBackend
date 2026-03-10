@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: "123456"
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
@@ -31,9 +31,7 @@ services:
       MINIO_BROWSER_REDIRECT_URL: "https://ripoonchig.me/hiuduwhgyuwyd78wyduwhudw/"
     command: server /data --console-address ":9001"
     ports:
-      - "9001:9001"
-    expose:
-      - "9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
     restart: unless-stopped
@@ -61,14 +59,17 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
 
   identity-service:
+    image: minionflow-identity-service:${IDENTITY_SERVICE_VERSION}
     build:
       context: ./identity-service
-      dockerfile: src/main/docker/Dockerfile.jvm
+      dockerfile: src/main/docker/Dockerfile.native-micro
     container_name: identity-service
     env_file:
       - ./.env
+    environment:
+      QUARKUS_PROFILE: prod
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,12 +78,15 @@ services:
       - backend
 
   project-service:
+    image: minionflow-project-service:${PROJECT_SERVICE_VERSION}
     build:
       context: ./project-service
-      dockerfile: src/main/docker/Dockerfile.jvm
+      dockerfile: src/main/docker/Dockerfile.native-micro
     container_name: project-service
+    environment:
+      QUARKUS_PROFILE: prod
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     depends_on:
       postgres:
         condition: service_healthy
@@ -91,12 +95,15 @@ services:
       - backend
 
   artifact-service:
+    image: minionflow-artifact-service:${ARTIFACT_SERVICE_VERSION}
     build:
       context: ./artifact-service
-      dockerfile: src/main/docker/Dockerfile.jvm
+      dockerfile: src/main/docker/Dockerfile.native-micro
     container_name: artifact-service
+    environment:
+      QUARKUS_PROFILE: prod
     ports:
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
     depends_on:
       postgres:
         condition: service_healthy
