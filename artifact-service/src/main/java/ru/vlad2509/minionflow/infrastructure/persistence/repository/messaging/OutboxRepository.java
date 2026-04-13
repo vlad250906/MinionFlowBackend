@@ -4,6 +4,8 @@ import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.messaging.MessageStatus;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.messaging.OutboxMessage;
 
@@ -13,6 +15,8 @@ import java.util.Optional;
 
 @ApplicationScoped
 public class OutboxRepository implements PanacheRepository<OutboxMessage> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(OutboxRepository.class);
 
     @Transactional
     public Optional<OutboxMessage> findByMessageId(String messageId) {
@@ -35,18 +39,24 @@ public class OutboxRepository implements PanacheRepository<OutboxMessage> {
 
     @Transactional
     public void markSent(String messageId) {
-        this.update("status = ?1, leasedBy = -1, leasedUntil = null where messageId = ?2", MessageStatus.DONE, messageId);
+        int cnt = this.update("status = ?1, leasedBy = -1, leasedUntil = null where messageId = ?2", MessageStatus.DONE, messageId);
+        if(cnt <= 0)
+            LOG.error("markSent failed, messageId: {}", messageId);
     }
 
     @Transactional
     public void markFailed(String messageId, String reason) {
-        this.update("status = ?1, failReason = ?2, leasedBy = -1, leasedUntil = null where messageId = ?3", MessageStatus.FAILED, reason, messageId);
+        int cnt = this.update("status = ?1, failReason = ?2, leasedBy = -1, leasedUntil = null where messageId = ?3", MessageStatus.FAILED, reason, messageId);
+        if(cnt <= 0)
+            LOG.error("markFailed failed, messageId: {}", messageId);
     }
 
     @Transactional
     public void markRetry(String messageId, int retryIn) {
         Instant now = Instant.now();
-        this.update("attemptsRemaining = attemptsRemaining - 1, nextAttemptAt = ?1, leasedBy = -1, leasedUntil = null where messageId = ?2", now.plusSeconds(retryIn), messageId);
+        int cnt = this.update("attemptsRemaining = attemptsRemaining - 1, nextAttemptAt = ?1, leasedBy = -1, leasedUntil = null where messageId = ?2", now.plusSeconds(retryIn), messageId);
+        if(cnt <= 0)
+            LOG.error("markRetry failed, messageId: {}", messageId);
     }
 
 }

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vlad2509.minionflow.infrastructure.messaging.EventListener;
 import ru.vlad2509.minionflow.infrastructure.messaging.rabbit.ConnectionManager;
+
 import java.io.IOException;
 
 @ApplicationScoped

@@ -38,7 +38,7 @@ public class RabbitService {
 
             channel.basicPublish("global", queue, properties, payload.getBytes(StandardCharsets.UTF_8));
             return true;
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.warn("Error publishing to queue: {}", queue, e);
             return false;
         }
@@ -49,7 +49,7 @@ public class RabbitService {
             channel.basicConsume(queue, false, deliverCallback, (tag) -> {
                 LOG.warn("Received CancelCallback from queue: {}", queue);
             });
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Error registering consumer to queue: {}", queue, e);
             throw new RuntimeException(e);
         }
@@ -58,7 +58,7 @@ public class RabbitService {
     public void ackConsumed(Channel channel, long tag) {
         try {
             channel.basicAck(tag, false);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Failed to ack for tag: {}", tag, e);
             throw new RuntimeException(e);
         }
@@ -67,7 +67,7 @@ public class RabbitService {
     public void nackConsumed(Channel channel, long tag, boolean isHardFail) {
         try {
             channel.basicNack(tag, false, isHardFail);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Failed to nack for tag: {}", tag, e);
             throw new RuntimeException(e);
         }

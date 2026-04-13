@@ -32,10 +32,11 @@ public class MockEventPublisher extends EventPublisher<MockMessage> {
         super(QUEUE);
     }
 
-    void startup(@Observes StartupEvent event) {}
+    void startup(@Observes StartupEvent event) {
+    }
 
     @Scheduled(every = "1s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
-    public void mockSend(){
+    public void mockSend() {
         Random random = new Random();
         MockMessage message = new MockMessage("This is a mock message!", random.nextInt(0, 10000));
         LOG.info("mockSend message: {}", message);
@@ -46,12 +47,12 @@ public class MockEventPublisher extends EventPublisher<MockMessage> {
     protected Channel setupChannel() {
         Channel channel = connectionManager.requestChannel();
 
-        try{
+        try {
             channel.exchangeDeclare("global", BuiltinExchangeType.TOPIC, true);
             channel.queueDeclare(QUEUE, true, false, false, null);
             channel.queueBind(QUEUE, "global", QUEUE);
-        }catch (IOException e){
-           throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         super.rabbitService.enableConfirmListener(channel, super.outboxService::ack, super.outboxService::nack);
@@ -61,7 +62,7 @@ public class MockEventPublisher extends EventPublisher<MockMessage> {
 
     @Override
     protected String serializeMessage(MockMessage message) {
-        try{
+        try {
             ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
             return ow.writeValueAsString(message);
         } catch (JsonProcessingException e) {

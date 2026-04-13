@@ -28,7 +28,7 @@ public class ConnectionManager {
             return connection.createChannel();
         } catch (IOException e) {
             LOG.error("Failed to open new RabbitMQ channel", e);
-            throw new RuntimeException(e);
+            return null;
         }
     }
 
@@ -37,7 +37,6 @@ public class ConnectionManager {
             channel.close();
         } catch (Exception e) {
             LOG.error("Failed to close RabbitMQ channel", e);
-            throw new RuntimeException(e);
         }
     }
 
