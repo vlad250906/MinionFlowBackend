@@ -33,6 +33,11 @@ public class Member extends PanacheEntityBase {
     @Column(nullable = false, name = "user_id")
     public UUID userId;
 
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "remote_user_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    public RemoteUser remoteUser;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     public MemberRole role;

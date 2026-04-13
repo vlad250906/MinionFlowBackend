@@ -1,0 +1,11 @@
+package ru.vlad2509.minionflow.infrastructure.messaging.events;
+
+import ru.vlad2509.minionflow.domain.model.MemberRole;
+import java.util.UUID;
+
+public record ProjectMemberChange(
+        UUID projectId,
+        UUID userId,
+        MemberRole newMemberRole
+) {
+}
