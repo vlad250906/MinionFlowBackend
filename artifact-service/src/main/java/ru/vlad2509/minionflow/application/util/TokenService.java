@@ -8,6 +8,7 @@ import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.model.ProjectPermission;
+import ru.vlad2509.minionflow.infrastructure.messaging.mock.MockEventPublisher;
 
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ public class TokenService {
     public static String ACCESS_TYPE_JWT = "acs";
     public static String REFRESH_TYPE_JWT = "ref";
 
-    @Inject
+    //@Inject
     //MemberRepository memberRepository;
 
     public UserContext parseJwt(JsonWebToken jwt) {
