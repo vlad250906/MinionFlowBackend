@@ -13,8 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vlad2509.minionflow.infrastructure.messaging.EventListener;
 import ru.vlad2509.minionflow.infrastructure.messaging.rabbit.ConnectionManager;
+import ru.vlad2509.minionflow.infrastructure.messaging.rabbit.RabbitService;
 
 import java.io.IOException;
+import java.util.Random;
 
 @ApplicationScoped
 public class MockEventListener extends EventListener<MockMessage> {
@@ -25,6 +27,8 @@ public class MockEventListener extends EventListener<MockMessage> {
     ConnectionManager connectionManager;
 
     private static final String QUEUE = "test-queue";
+    @Inject
+    RabbitService rabbitService;
 
     public MockEventListener() {
         super(QUEUE, true, MockEventListener::eventHandler);
@@ -35,12 +39,17 @@ public class MockEventListener extends EventListener<MockMessage> {
     }
 
     public static void eventHandler(MockMessage message) {
+        Random random = new Random();
+        if (random.nextInt(10) < 7)
+            throw new RuntimeException("unluck :(");
         LOG.info("Received: {}; {}", message.text(), message.num());
     }
 
     @Override
     protected Channel setupChannel() {
         Channel channel = connectionManager.requestChannel();
+
+        rabbitService.enableConfirmSending(channel);
 
         try {
             channel.exchangeDeclare("global", BuiltinExchangeType.TOPIC, true);

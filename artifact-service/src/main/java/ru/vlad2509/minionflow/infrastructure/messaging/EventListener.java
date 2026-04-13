@@ -29,7 +29,7 @@ public abstract class EventListener<T> {
     private Channel channel;
     private static final Logger LOG = LoggerFactory.getLogger(EventListener.class);
 
-    public void startListening(){
+    public void startListening() {
         channel = setupChannel();
         rabbitService.registerConsumer(channel, queueName, (tag, del) -> rabbitPool.execute(() -> asyncProcess(tag, del)));
     }
@@ -51,8 +51,11 @@ public abstract class EventListener<T> {
         T message = null;
 
         try {
-            if (inboxCheck && !isUniqueMessage(messageId))
+            if (inboxCheck && !isUniqueMessage(messageId)) {
+                LOG.warn("Received duplicate message: {}", messageId);
+                rabbitService.ackConsumed(channel, tag);
                 return;
+            }
         } catch (Exception e) {
             rabbitService.nackConsumed(channel, tag, false);
             return;
@@ -61,9 +64,12 @@ public abstract class EventListener<T> {
         try {
             message = parse(payload);
         } catch (Exception ex) {
-            LOG.warn("Error parsing message from RabbitMQ", ex);
+            LOG.warn("Error parsing message from RabbitMQ: {}", messageId, ex);
+            try {
+                inboxRepository.markFailed(messageId, "[PARSE] Malformed message");
+            } catch (Exception ignored) {
+            }
             rabbitService.nackConsumed(channel, tag, true);
-            inboxRepository.markFailed(messageId, "[PARSE] Malformed message");
             return;
         }
 
@@ -71,9 +77,13 @@ public abstract class EventListener<T> {
         try {
             eventHandler.accept(message);
         } catch (Exception ex) {
-            LOG.warn("Error executing message handler for RabbitMQ queue", ex);
+            LOG.warn("Error executing message handler for RabbitMQ queue: {}", messageId, ex);
+            try {
+                inboxRepository.markFailed(messageId, "[EXEC] Error executing message handler");
+            } catch (Exception ignored) {
+            }
             rabbitService.nackConsumed(channel, tag, false);
-            inboxRepository.markFailed(messageId, "[EXEC] Error executing message handler");
+            return;
         }
 
         rabbitService.ackConsumed(channel, tag);

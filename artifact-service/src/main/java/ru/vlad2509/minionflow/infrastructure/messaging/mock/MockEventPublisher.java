@@ -35,7 +35,7 @@ public class MockEventPublisher extends EventPublisher<MockMessage> {
     void startup(@Observes StartupEvent event) {
     }
 
-    @Scheduled(every = "1s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    @Scheduled(every = "2s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     public void mockSend() {
         Random random = new Random();
         MockMessage message = new MockMessage("This is a mock message!", random.nextInt(0, 10000));

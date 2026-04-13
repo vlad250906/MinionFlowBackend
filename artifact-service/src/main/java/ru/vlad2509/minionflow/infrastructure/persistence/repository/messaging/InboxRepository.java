@@ -32,7 +32,7 @@ public class InboxRepository implements PanacheRepository<InboxMessage> {
 
     @Transactional
     public void markDone(String messageId) {
-        this.update("status = ?1 where messageId = ?2", MessageStatus.DONE, messageId);
+        this.update("status = ?1, failReason = null where messageId = ?2", MessageStatus.DONE, messageId);
     }
 
     @Transactional

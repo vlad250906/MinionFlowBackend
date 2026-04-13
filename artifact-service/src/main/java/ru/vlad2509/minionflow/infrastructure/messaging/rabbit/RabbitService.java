@@ -66,9 +66,17 @@ public class RabbitService {
 
     public void nackConsumed(Channel channel, long tag, boolean isHardFail) {
         try {
-            channel.basicNack(tag, false, isHardFail);
+            channel.basicNack(tag, false, !isHardFail);
         } catch (Exception e) {
             LOG.error("Failed to nack for tag: {}", tag, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void enableConfirmSending(Channel channel){
+        try {
+            channel.basicRecover(true);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
