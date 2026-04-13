@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.infrastructure.messaging.mock;
+package ru.vlad2509.minionflow.infrastructure.messaging.events;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,11 +27,10 @@ public class MockEventListener extends EventListener<MockMessage> {
     ConnectionManager connectionManager;
 
     private static final String QUEUE = "test-queue";
-    @Inject
-    RabbitService rabbitService;
 
     public MockEventListener() {
-        super(QUEUE, true, MockEventListener::eventHandler);
+        super(QUEUE, true);
+        super.setEventHandler(MockEventListener::eventHandler);
     }
 
     void startup(@Observes StartupEvent event) {
@@ -50,14 +49,7 @@ public class MockEventListener extends EventListener<MockMessage> {
         Channel channel = connectionManager.requestChannel();
 
         rabbitService.enableConfirmSending(channel);
-
-        try {
-            channel.exchangeDeclare("global", BuiltinExchangeType.TOPIC, true);
-            channel.queueDeclare(QUEUE, true, false, false, null);
-            channel.queueBind(QUEUE, "global", QUEUE);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        rabbitService.initQueue(channel, QUEUE, true);
 
         return channel;
     }

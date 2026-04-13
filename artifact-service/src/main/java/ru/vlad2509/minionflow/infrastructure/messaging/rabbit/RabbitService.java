@@ -1,6 +1,7 @@
 package ru.vlad2509.minionflow.infrastructure.messaging.rabbit;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -76,6 +77,16 @@ public class RabbitService {
     public void enableConfirmSending(Channel channel){
         try {
             channel.basicRecover(true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void initQueue(Channel channel, String queueName, boolean durable){
+        try {
+            channel.exchangeDeclare("global", BuiltinExchangeType.TOPIC, true);
+            channel.queueDeclare(queueName, durable, false, false, null);
+            channel.queueBind(queueName, "global", queueName);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -7,11 +7,13 @@ import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.ProjectInfo;
 import ru.vlad2509.minionflow.application.dto.ProjectInfoShort;
 import ru.vlad2509.minionflow.application.context.UserContext;
+import ru.vlad2509.minionflow.application.dto.ProjectMemberChange;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.MemberRole;
 import ru.vlad2509.minionflow.domain.ProjectNameVo;
 import ru.vlad2509.minionflow.domain.ProjectPermission;
+import ru.vlad2509.minionflow.infrastructure.messaging.events.MemberChangeEventPublisher;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Member;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Project;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.MemberRepository;
@@ -32,6 +34,9 @@ public class ProjectService {
     @Inject
     MemberRepository memberRepository;
 
+    @Inject
+    MemberChangeEventPublisher memberChangeEventPublisher;
+
     @Transactional
     public ProjectInfo createProject(UserContext context, ProjectNameVo projectName, String projectDescription) {
         if (projectRepository.findByName(projectName).isPresent())
@@ -42,6 +47,7 @@ public class ProjectService {
 
         projectRepository.persist(project);
         memberRepository.persist(member);
+        memberChangeEventPublisher.publish(new ProjectMemberChange(project.id, member.userId, member.role));
 
         return new ProjectInfo(project.id, project.getProjectName(), project.projectDescription);
     }

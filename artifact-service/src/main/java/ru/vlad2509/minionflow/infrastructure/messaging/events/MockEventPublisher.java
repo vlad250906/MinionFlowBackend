@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.infrastructure.messaging.mock;
+package ru.vlad2509.minionflow.infrastructure.messaging.events;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +35,7 @@ public class MockEventPublisher extends EventPublisher<MockMessage> {
     void startup(@Observes StartupEvent event) {
     }
 
-    @Scheduled(every = "2s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    //@Scheduled(every = "2s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     public void mockSend() {
         Random random = new Random();
         MockMessage message = new MockMessage("This is a mock message!", random.nextInt(0, 10000));
@@ -47,14 +47,7 @@ public class MockEventPublisher extends EventPublisher<MockMessage> {
     protected Channel setupChannel() {
         Channel channel = connectionManager.requestChannel();
 
-        try {
-            channel.exchangeDeclare("global", BuiltinExchangeType.TOPIC, true);
-            channel.queueDeclare(QUEUE, true, false, false, null);
-            channel.queueBind(QUEUE, "global", QUEUE);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        super.rabbitService.initQueue(channel, QUEUE, true);
         super.rabbitService.enableConfirmListener(channel, super.outboxService::ack, super.outboxService::nack);
 
         return channel;

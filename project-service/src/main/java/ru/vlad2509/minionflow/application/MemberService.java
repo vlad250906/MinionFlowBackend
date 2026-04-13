@@ -1,15 +1,18 @@
 package ru.vlad2509.minionflow.application;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.ProjectMember;
 import ru.vlad2509.minionflow.application.context.UserContext;
+import ru.vlad2509.minionflow.application.dto.ProjectMemberChange;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.MemberRole;
 import ru.vlad2509.minionflow.domain.ProjectPermission;
+import ru.vlad2509.minionflow.infrastructure.messaging.events.MemberChangeEventPublisher;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Member;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.Project;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.MemberRepository;
@@ -30,6 +33,9 @@ public class MemberService {
     @Inject
     TokenService tokenService;
 
+    @Inject
+    MemberChangeEventPublisher memberChangeEventPublisher;
+
 
     @Transactional
     public ProjectMember addMember(UserContext context, UUID projectId, UUID userId, MemberRole role) {
@@ -44,6 +50,7 @@ public class MemberService {
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND));
         Member member = new Member(project, userId, role);
         memberRepository.persist(member);
+        onMemberUpdate(new ProjectMemberChange(projectId, userId, role));
 
         return new ProjectMember(projectId, member.userId, member.role.toString(), member.memberSince);
     }
@@ -59,6 +66,8 @@ public class MemberService {
                 .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "not a member of project"));
 
         member.role = role;
+        onMemberUpdate(new ProjectMemberChange(projectId, userId, role));
+
         return new ProjectMember(projectId, userId, role.toString(), member.memberSince);
     }
 
@@ -71,6 +80,8 @@ public class MemberService {
 
         if (memberRepository.deleteByProjectUser(projectId, userId) <= 0)
             throw new ApiException(ApiError.PROJECT_NOT_FOUND);
+
+        onMemberUpdate(new ProjectMemberChange(projectId, userId, null));
     }
 
     public ProjectMember getMember(UserContext context, UUID projectId, UUID userId) {
@@ -86,6 +97,10 @@ public class MemberService {
 
         return memberRepository.findAllMembers(paginationContext, projectId).stream()
                 .map(member -> new ProjectMember(projectId, member.userId, member.role.toString(), member.memberSince)).toList();
+    }
+
+    private void onMemberUpdate(ProjectMemberChange change){
+        memberChangeEventPublisher.publish(change);
     }
 
 

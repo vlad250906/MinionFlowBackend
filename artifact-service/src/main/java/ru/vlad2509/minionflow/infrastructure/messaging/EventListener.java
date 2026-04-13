@@ -21,9 +21,9 @@ public abstract class EventListener<T> {
     RabbitPool rabbitPool;
 
     @Inject
-    RabbitService rabbitService;
+    protected RabbitService rabbitService;
 
-    private final Consumer<T> eventHandler;
+    protected Consumer<T> eventHandler;
     private final boolean inboxCheck;
     private final String queueName;
     private Channel channel;
@@ -34,9 +34,12 @@ public abstract class EventListener<T> {
         rabbitService.registerConsumer(channel, queueName, (tag, del) -> rabbitPool.execute(() -> asyncProcess(tag, del)));
     }
 
-    protected EventListener(String queueName, boolean inboxCheck, Consumer<T> eventHandler) {
+    protected EventListener(String queueName, boolean inboxCheck) {
         this.queueName = queueName;
         this.inboxCheck = inboxCheck;
+    }
+
+    public void setEventHandler(Consumer<T> eventHandler){
         this.eventHandler = eventHandler;
     }
 

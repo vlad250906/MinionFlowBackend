@@ -84,7 +84,7 @@ public class JarService {
     }
 
     public StreamingOutput downloadJar(UserContext userContext, UUID projectId, UUID artifactId) {
-        tokenService.authorize(userContext, projectId, ProjectPermission.JAR_READ);
+        tokenService.authorize(userContext, projectId, ProjectPermission.JAR_DOWNLOAD);
         return artifactService.downloadArtifact(userContext, artifactId);
     }
 
