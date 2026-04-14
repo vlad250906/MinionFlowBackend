@@ -2,6 +2,7 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    USERNAME_NOT_FOUND(404, "usernameNotFound", "User with such username not found"),
     OWNER_LEAVE(409, "leaveImpossible", "Project owner can't leave the project"),
     OWNER_CONFLICT(409, "ownerConflict", "There can not be more than one OWNER in this project"),
     ALREADY_MEMBER(409, "alreadyMember", "User is already member of this project"),

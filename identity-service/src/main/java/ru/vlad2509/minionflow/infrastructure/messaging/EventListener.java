@@ -23,7 +23,7 @@ public abstract class EventListener<T> {
     @Inject
     protected RabbitService rabbitService;
 
-    private Consumer<T> eventHandler;
+    protected Consumer<T> eventHandler;
     private final boolean inboxCheck;
     private final String queueName;
     private Channel channel;

@@ -1,4 +1,4 @@
-﻿package ru.vlad2509.minionflow.infrastructure.persistence.model;
+package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
@@ -10,7 +10,7 @@ import java.util.UUID;
 public class RemoteUser extends PanacheEntityBase {
 
     @Id
-    @Column(nullable = false)
+    @Column(nullable = false, name = "user_id")
     public UUID userId;
 
     @Column(nullable = false)

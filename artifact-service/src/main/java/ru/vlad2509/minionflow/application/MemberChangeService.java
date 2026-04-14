@@ -5,7 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import ru.vlad2509.minionflow.infrastructure.messaging.events.MemberChangeEventListener;
-import ru.vlad2509.minionflow.infrastructure.messaging.events.ProjectMemberChange;
+import ru.vlad2509.minionflow.application.dto.messaging.ProjectMemberChange;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.RemoteProjectMemberRepository;
 
 @ApplicationScoped

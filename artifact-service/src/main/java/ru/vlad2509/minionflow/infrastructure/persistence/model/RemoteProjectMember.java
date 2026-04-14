@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.infrastructure.persistence.repository.messaging;
+package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;

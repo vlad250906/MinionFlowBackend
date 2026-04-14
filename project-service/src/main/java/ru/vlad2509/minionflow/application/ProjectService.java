@@ -7,7 +7,7 @@ import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.ProjectInfo;
 import ru.vlad2509.minionflow.application.dto.ProjectInfoShort;
 import ru.vlad2509.minionflow.application.context.UserContext;
-import ru.vlad2509.minionflow.application.dto.ProjectMemberChange;
+import ru.vlad2509.minionflow.application.dto.messaging.ProjectMemberChange;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.MemberRole;

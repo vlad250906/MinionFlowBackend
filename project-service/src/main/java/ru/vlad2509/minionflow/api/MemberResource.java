@@ -42,13 +42,12 @@ public class MemberResource {
         return PaginatedResponse.of(context, memberService.getMembers(context, tokenService.parseJwt(jwt), projectId));
     }
 
-    // TODO: Система инвайтов с оповещением по почте??
+    // TODO: Система инвайтов с оповещением по почте (точно не MVP)??
     @POST
     @Path("")
     @Authenticated
     public ProjectMember addMember(@RestPath("projectId") UUID projectId, ProjectMemberAddRequest dto) {
-        // FIXME: преобразование username в userId и проверка!!
-        return memberService.addMember(tokenService.parseJwt(jwt), projectId, UUID.fromString(dto.username()), dto.memberRole());
+        return memberService.addMember(tokenService.parseJwt(jwt), projectId, dto.username(), dto.memberRole());
     }
 
     @GET

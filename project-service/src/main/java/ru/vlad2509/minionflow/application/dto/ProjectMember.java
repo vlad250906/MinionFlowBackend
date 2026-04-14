@@ -6,6 +6,7 @@ import java.util.UUID;
 public record ProjectMember(
         UUID projectId,
         UUID userId,
+        String username,
         String memberRole,
         Instant memberSince
 

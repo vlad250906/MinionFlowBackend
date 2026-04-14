@@ -4,12 +4,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.application.dto.UserInfo;
+import ru.vlad2509.minionflow.application.dto.messaging.UserChange;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.EmailService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
 import ru.vlad2509.minionflow.domain.EmailVo;
 import ru.vlad2509.minionflow.domain.UsernameVo;
+import ru.vlad2509.minionflow.infrastructure.messaging.events.UserChangeEventPublisher;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.SessionEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.VerificationTicketEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.AccountStatus;
@@ -38,6 +40,9 @@ public class AccountService {
     @Inject
     SessionService sessionService;
 
+    @Inject
+    UserChangeEventPublisher userChangeEventPublisher;
+
     @Transactional
     public UUID register(EmailVo email, UsernameVo username, String password) {
         if (userRepository.findByEmailOptional(email).isPresent())
@@ -56,6 +61,8 @@ public class AccountService {
         // TODO: вынести это куда-то
         emailService.scheduleSending(email, "MinionFlow Registration", "registration \naccountId=" + user.userId +
                 "\nverificationToken=" + ticket.verificationToken);
+
+        userChangeEventPublisher.publish(new UserChange(user.userId, user.username));
 
         return user.userId;
     }
@@ -104,6 +111,8 @@ public class AccountService {
         SessionEntity session = sessionService.getSession(refreshToken);
         UserEntity userEntity = session.user;
         userEntity.username = newUsername.value();
+
+        userChangeEventPublisher.publish(new UserChange(userEntity.userId, userEntity.username));
     }
 
     public UserInfo getUserInfo(UUID userId) {
