@@ -7,10 +7,12 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveViolationException;
 import io.quarkus.security.AuthenticationFailedException;
+import io.quarkus.security.UnauthorizedException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.MediaType;
@@ -32,9 +34,14 @@ public class ApiExceptionHandler {
     private static final String PROBLEM_JSON = "application/problem+json";
 
     @ServerExceptionMapper
-    public RestResponse<ApiErrorResponse> mapUnauthorized(AuthenticationFailedException ex, UriInfo uriInfo, ContainerRequestContext req) {
+    public RestResponse<ApiErrorResponse> mapUnauthorized(UnauthorizedException ex, UriInfo uriInfo, ContainerRequestContext req) {
+        return build(401, "unauthorized", "Unauthorized", "Bearer JWT is missing", uriInfo, req, null);
+    }
+
+    @ServerExceptionMapper
+    public RestResponse<ApiErrorResponse> mapAuthenticationFailed(AuthenticationFailedException ex, UriInfo uriInfo, ContainerRequestContext req) {
         //ex.printStackTrace();
-        return build(401, "unauthorized", "Unauthorized", "Incorrect Bearer JWT", uriInfo, req, null);
+        return build(401, "unauthorized", "Unauthorized", "Bearer JWT is invalid or expired", uriInfo, req, null);
     }
 
 
@@ -82,15 +89,15 @@ public class ApiExceptionHandler {
 
     @ServerExceptionMapper
     public RestResponse<ApiErrorResponse> mapResteasyReactiveViolation(ResteasyReactiveViolationException ex,
-                                                 UriInfo uriInfo,
-                                                 ContainerRequestContext req) {
+                                                                       UriInfo uriInfo,
+                                                                       ContainerRequestContext req) {
         return validationResponse(ex, uriInfo, req);
     }
 
     @ServerExceptionMapper
     public RestResponse<ApiErrorResponse> mapConstraintViolation(ConstraintViolationException ex,
-                                           UriInfo uriInfo,
-                                           ContainerRequestContext req) {
+                                                                 UriInfo uriInfo,
+                                                                 ContainerRequestContext req) {
         return validationResponse(ex, uriInfo, req);
     }
 
@@ -132,12 +139,12 @@ public class ApiExceptionHandler {
     }
 
     private RestResponse<ApiErrorResponse> build(int status,
-                           String code,
-                           String title,
-                           String detail,
-                           UriInfo uriInfo,
-                           ContainerRequestContext req,
-                           List<ApiErrorResponse.FieldError> errors) {
+                                                 String code,
+                                                 String title,
+                                                 String detail,
+                                                 UriInfo uriInfo,
+                                                 ContainerRequestContext req,
+                                                 List<ApiErrorResponse.FieldError> errors) {
         ApiErrorResponse body = new ApiErrorResponse(
                 status,
                 title,

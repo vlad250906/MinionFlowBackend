@@ -7,6 +7,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveViolationException;
 import io.quarkus.security.AuthenticationFailedException;
+import io.quarkus.security.UnauthorizedException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -30,6 +31,11 @@ public class ApiExceptionHandler {
 
     private static final Logger LOG = Logger.getLogger(ApiExceptionHandler.class);
     private static final String PROBLEM_JSON = "application/problem+json";
+
+    @ServerExceptionMapper
+    public RestResponse<ApiErrorResponse> mapUnauthorized(UnauthorizedException ex, UriInfo uriInfo, ContainerRequestContext req) {
+        return build(401, "unauthorized", "Unauthorized", "Bearer JWT is missing", uriInfo, req, null);
+    }
 
     @ServerExceptionMapper
     public RestResponse<ApiErrorResponse> mapUnauthorized(AuthenticationFailedException ex, UriInfo uriInfo, ContainerRequestContext req) {

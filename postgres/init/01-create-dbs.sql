@@ -1,3 +1,3 @@
-CREATE DATABASE test;
-CREATE DATABASE test1;
-CREATE DATABASE test2;
+CREATE DATABASE identity_service;
+CREATE DATABASE project_service;
+CREATE DATABASE artifact_service;
