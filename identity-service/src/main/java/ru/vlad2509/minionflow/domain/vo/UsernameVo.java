@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.domain;
+package ru.vlad2509.minionflow.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

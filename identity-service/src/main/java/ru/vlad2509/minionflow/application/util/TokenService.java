@@ -59,7 +59,6 @@ public class TokenService {
             return null;
         try {
             JsonWebToken token = jwtParser.parse(refreshToken);
-            System.out.println((String) token.getClaim("typ"));
             if (!token.getClaim("typ").equals(REFRESH_TYPE_JWT))
                 return null;
 
@@ -69,7 +68,6 @@ public class TokenService {
 
             return new DecodedRefreshToken(userId, sessionId, jwtId);
         } catch (ParseException | IllegalArgumentException ex) {
-            ex.printStackTrace();
             return null;
         }
     }

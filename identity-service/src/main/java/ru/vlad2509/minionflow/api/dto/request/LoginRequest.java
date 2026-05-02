@@ -2,8 +2,8 @@ package ru.vlad2509.minionflow.api.dto.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import ru.vlad2509.minionflow.domain.EmailVo;
-import ru.vlad2509.minionflow.domain.UsernameVo;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.vo.UsernameVo;
 
 public record LoginRequest(
 

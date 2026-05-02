@@ -23,7 +23,7 @@ public class MailerSmtpService implements SmtpService {
         try {
             mailer.send(Mail.withText(to, subject, content));
         } catch (RuntimeException ex) {
-            LOG.error("Error sending mail", ex);
+            LOG.error("Error sending mail to {}", to, ex);
             SMTPException smtpException = findClause(ex, SMTPException.class);
             if (smtpException == null)
                 return SendingResult.UNAVAILABLE;

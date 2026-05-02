@@ -1,6 +1,5 @@
 package ru.vlad2509.minionflow.application.exception;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import ru.vlad2509.minionflow.MyApplication;
 
 public class ApiException extends RuntimeException {

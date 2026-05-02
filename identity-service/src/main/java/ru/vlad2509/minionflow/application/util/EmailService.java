@@ -8,7 +8,6 @@ import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import ru.vlad2509.minionflow.application.port.out.SendingResult;
 import ru.vlad2509.minionflow.application.port.out.SmtpService;
-import ru.vlad2509.minionflow.domain.EmailVo;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.EmailMessageEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.EmailMessageRepository;
 
@@ -24,10 +23,10 @@ public class EmailService {
     @ConfigProperty(name = "identity-service.email_batch", defaultValue = "10")
     int batchSize;
 
-    @ConfigProperty(name = "identity-service.instance-id", defaultValue = "1")
+    @ConfigProperty(name = "service-common.instance-id", defaultValue = "1")
     int instanceId;
 
-    @ConfigProperty(name = "identity-service.take-email-limit", defaultValue = "300")
+    @ConfigProperty(name = "service-common.lease_timeout", defaultValue = "300")
     int takeEmailLimit;
 
     @ConfigProperty(name = "identity-service.email-max-attempts", defaultValue = "5")
@@ -50,7 +49,7 @@ public class EmailService {
     }
 
     @Transactional
-    public void scheduleSending(EmailVo email, String subject, String content) {
+    public void scheduleSending(String email, String subject, String content) {
         EmailMessageEntity entity = new EmailMessageEntity(email, subject, content, emailMaxAttempts);
         emailMessageRepository.persist(entity);
     }
@@ -75,8 +74,14 @@ public class EmailService {
         EmailMessageEntity message = emailMessageRepository.findById(messageId);
         switch (result) {
             case SUCCESS -> emailMessageRepository.markSent(messageId);
-            case IMPOSSIBLE -> emailMessageRepository.markFail(message.id);
-            case UNAVAILABLE -> emailMessageRepository.markTryAgain(message.id, calcDelay(message));
+            case IMPOSSIBLE -> emailMessageRepository.markFail(message.id, "hard failure, see logs");
+            case UNAVAILABLE -> {
+                if (message.attempts - 1 <= 0) {
+                    emailMessageRepository.markFail(message.id, "no attempts remain");
+                } else {
+                    emailMessageRepository.markTryAgain(message.id, calcDelay(message));
+                }
+            }
         }
         emailMessageRepository.releaseMessage(message);
         return result;

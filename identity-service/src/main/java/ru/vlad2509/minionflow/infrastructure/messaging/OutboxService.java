@@ -22,16 +22,16 @@ public class OutboxService {
     @Inject
     OutboxRepository outboxRepository;
 
-    @ConfigProperty(name = "artifact-service.message_batch", defaultValue = "10")
+    @ConfigProperty(name = "service-common.message_batch", defaultValue = "10")
     int batchSize;
 
-    @ConfigProperty(name = "artifact-service.instance-id", defaultValue = "1")
+    @ConfigProperty(name = "service-common.instance-id", defaultValue = "1")
     int instanceId;
 
-    @ConfigProperty(name = "artifact-service.lease_timeout", defaultValue = "300")
+    @ConfigProperty(name = "service-common.lease_timeout", defaultValue = "300")
     int leaseTimeout;
 
-    @ConfigProperty(name = "artifact-service.max-attempts", defaultValue = "5")
+    @ConfigProperty(name = "service-common.max-attempts", defaultValue = "5")
     int maxAttempts;
 
     private final ConcurrentMap<String, EventPublisher<?>> senders = new ConcurrentHashMap<>();

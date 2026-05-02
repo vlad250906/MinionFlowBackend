@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.infrastructure.persistence.model.enums;
+package ru.vlad2509.minionflow.domain.enums;
 
 public enum VerificationTicketType {
 

@@ -3,14 +3,14 @@ package ru.vlad2509.minionflow.application;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.application.util.EmailService;
 import ru.vlad2509.minionflow.application.util.PasswordService;
-import ru.vlad2509.minionflow.domain.EmailVo;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.UserEntity;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.VerificationTicketEntity;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.enums.VerificationTicketType;
+import ru.vlad2509.minionflow.domain.User;
+import ru.vlad2509.minionflow.domain.VerificationTicket;
+import ru.vlad2509.minionflow.domain.vo.EmailVo;
+import ru.vlad2509.minionflow.domain.enums.VerificationTicketType;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.UserRepository;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.VerificationTicketRepository;
 
@@ -19,11 +19,14 @@ import java.util.UUID;
 @ApplicationScoped
 public class RecoveryService {
 
+    @ConfigProperty(name = "identity-service.recovery-token-ttl", defaultValue = "300")
+    int registrationTokenTtl;
+
     @Inject
     UserRepository userRepository;
 
     @Inject
-    EmailService emailService;
+    EmailTemplateService emailTemplateService;
 
     @Inject
     VerificationTicketRepository verificationTicketRepository;
@@ -33,35 +36,35 @@ public class RecoveryService {
 
     @Transactional
     public void beginRecovery(EmailVo email) {
-        UserEntity user = userRepository.findByEmailOptional(email).orElse(null);
+        User user = userRepository.findByEmailOptional(email).orElse(null);
         if (user == null)
             return;
 
-        verificationTicketRepository.findByUserAndType(user.userId, VerificationTicketType.RECOVERY_TICKET)
-                .ifPresent(verificationTicketEntity ->
-                        verificationTicketRepository.delete(verificationTicketEntity));
+        verificationTicketRepository.findByUserAndType(user.getId(), VerificationTicketType.RECOVERY_TICKET)
+                .ifPresent(verificationTicket ->
+                        verificationTicketRepository.delete(verificationTicket.getInternalId()));
 
-        VerificationTicketEntity ticket = new VerificationTicketEntity(user.userId,
-                VerificationTicketType.RECOVERY_TICKET, UUID.randomUUID());
-        verificationTicketRepository.persist(ticket);
+        VerificationTicket ticket = new VerificationTicket(user,
+                VerificationTicketType.RECOVERY_TICKET, UUID.randomUUID(), registrationTokenTtl);
+        verificationTicketRepository.create(ticket);
 
-        emailService.scheduleSending(email, "MinionFlow Account Recovery","recovery \naccountId=" + user.userId +
-                "\nverificationToken=" + ticket.verificationToken);
+        emailTemplateService.recovery(user.getEmail(), ticket);
     }
 
     @Transactional
     public void endRecovery(UUID userId, UUID verificationToken, String newPassword) {
-        UserEntity user = userRepository.findByIdOptional(userId)
+        User user = userRepository.findByIdOptional(userId)
                 .orElseThrow(() -> new ApiException(ApiError.RECOVERY_FAILED, "user not found"));
 
-        VerificationTicketEntity ticket = verificationTicketRepository.findByUserAndType(userId, VerificationTicketType.RECOVERY_TICKET)
+        VerificationTicket ticket = verificationTicketRepository.findByUserAndType(userId, VerificationTicketType.RECOVERY_TICKET)
                 .orElseThrow(() -> new ApiException(ApiError.RECOVERY_FAILED, "ticket not found"));
 
-        if (!ticket.verificationToken.equals(verificationToken))
-            throw new ApiException(ApiError.RECOVERY_FAILED, "wrong verification token");
+        if (!ticket.isValid(verificationToken))
+            throw new ApiException(ApiError.RECOVERY_FAILED, "wrong verification token or expired");
 
-        user.passwordHash = passwordService.hashNew(newPassword);
-        verificationTicketRepository.delete(ticket);
+        user.setPasswordHash(passwordService.hashNew(newPassword));
+        userRepository.updatePasswordHash(user);
+        verificationTicketRepository.delete(ticket.getInternalId());
     }
 
 }

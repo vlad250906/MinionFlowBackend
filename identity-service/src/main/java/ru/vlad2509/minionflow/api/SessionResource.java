@@ -9,7 +9,6 @@ import org.jboss.resteasy.reactive.RestCookie;
 import org.jboss.resteasy.reactive.RestResponse;
 import ru.vlad2509.minionflow.api.dto.response.JwtPairResponse;
 import ru.vlad2509.minionflow.api.dto.request.LoginRequest;
-import ru.vlad2509.minionflow.api.dto.request.RefreshRequest;
 import ru.vlad2509.minionflow.api.dto.response.LoginResponse;
 import ru.vlad2509.minionflow.application.AuthService;
 import ru.vlad2509.minionflow.application.dto.TokenPair;
@@ -47,8 +46,7 @@ public class SessionResource {
 
     @POST
     @Path("/refresh")
-    public RestResponse<JwtPairResponse> refresh(@Valid RefreshRequest request,
-                                                 @RestCookie("refreshJWT") String refreshJWT) {
+    public RestResponse<JwtPairResponse> refresh(@RestCookie("refreshJWT") String refreshJWT) {
         TokenPair pair = authService.refreshToken(refreshJWT);
 
         NewCookie cookie = new NewCookie.Builder("refreshJWT")
@@ -67,8 +65,7 @@ public class SessionResource {
 
     @DELETE
     @Path("/me")
-    public RestResponse logout(@Valid RefreshRequest request,
-                               @RestCookie("refreshJWT") String refreshJWT) {
+    public RestResponse logout(@RestCookie("refreshJWT") String refreshJWT) {
         authService.logout(refreshJWT);
         NewCookie cookie = new NewCookie.Builder("refreshJWT").maxAge(0).build();
         return RestResponse.ResponseBuilder.noContent().cookie(cookie).build();
@@ -76,23 +73,10 @@ public class SessionResource {
 
     @DELETE
     @Path("")
-    public RestResponse logoutAll(@Valid RefreshRequest request,
-                                  @RestCookie("refreshJWT") String refreshJWT) {
+    public RestResponse logoutAll(@RestCookie("refreshJWT") String refreshJWT) {
         authService.logoutAll(refreshJWT);
         NewCookie cookie = new NewCookie.Builder("refreshJWT").maxAge(0).build();
         return RestResponse.ResponseBuilder.noContent().cookie(cookie).build();
     }
-
-
-//    @Inject
-//    PasswordService passwordService;
-//
-//    @GET
-//    @Path("/test")
-//    public String hash(@QueryParam("password") String password) {
-//        if (password == null)
-//            return "";
-//        return passwordService.hashNew(password);
-//    }
 
 }

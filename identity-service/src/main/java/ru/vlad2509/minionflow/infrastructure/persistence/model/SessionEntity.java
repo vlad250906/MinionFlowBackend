@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import ru.vlad2509.minionflow.domain.UserSession;
 
 import java.util.UUID;
 
@@ -12,9 +13,10 @@ import java.util.UUID;
 public class SessionEntity extends PanacheEntityBase {
 
     @Id
+    @Column(name = "session_id")
     public UUID sessionId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "jwt_id", nullable = false, unique = true)
     public UUID jwtId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -29,5 +31,9 @@ public class SessionEntity extends PanacheEntityBase {
         this.sessionId = sessionId;
         this.jwtId = jwtId;
         this.user = user;
+    }
+
+    public UserSession toDomain(){
+        return new UserSession(sessionId, jwtId, user.toDomain());
     }
 }

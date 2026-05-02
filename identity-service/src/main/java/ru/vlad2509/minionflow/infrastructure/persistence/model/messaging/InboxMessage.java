@@ -9,20 +9,20 @@ public class InboxMessage extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
+    @Column(name = "id", nullable = false)
     public Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "message_id", nullable = false, unique = true)
     public String messageId;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     public MessageStatus status;
 
-    @Column(nullable = true)
+    @Column(name = "fail_reason", nullable = true)
     public String failReason;
 
-    @Column(nullable = false)
+    @Column(name = "attempts_remaining", nullable = false)
     public Integer attemptsRemaining;
 
     public InboxMessage() {
