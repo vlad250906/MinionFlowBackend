@@ -11,12 +11,13 @@ public record PaginationParams(
 
         @QueryParam("size")
         @Min(1)
-        @Max(100)
+        @Max(1000)
         @DefaultValue("20")
         int pageSize,
 
         @QueryParam("page")
         @Min(0)
+        @Max(1000000)
         @DefaultValue("0")
         int pageIndex
 

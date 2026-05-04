@@ -11,36 +11,39 @@ public class OutboxMessage extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
+    @Column(name = "id", nullable = false)
     public Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "message_id", nullable = false, unique = true)
     public String messageId;
 
-    @Column(nullable = false)
+    @Column(name = "queue", nullable = false)
     public String queue;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     public MessageStatus status;
 
-    @Column(nullable = false)
+    @Column(name = "content", columnDefinition = "text", nullable = false)
     public String content;
 
-    @Column(nullable = true)
+    @Column(name = "fail_reason", nullable = true)
     public String failReason;
 
-    @Column(nullable = false)
+    @Column(name = "leased_by", nullable = false)
     public Integer leasedBy;
 
-    @Column(nullable = true)
+    @Column(name = "leased_until", nullable = true, columnDefinition = "timestamptz")
     public Instant leasedUntil;
 
-    @Column(nullable = false)
+    @Column(name = "attempts_remaining", nullable = false)
     public Integer attemptsRemaining;
 
-    @Column(nullable = true)
+    @Column(name = "next_attempt_at", nullable = true, columnDefinition = "timestamptz")
     public Instant nextAttemptAt;
+
+    @Column(name = "created_at", nullable = false, columnDefinition = "timestamptz")
+    public Instant createdAt;
 
     public OutboxMessage() {
     }
@@ -56,5 +59,6 @@ public class OutboxMessage extends PanacheEntityBase {
         this.leasedUntil = null;
         this.nextAttemptAt = null;
         this.failReason = null;
+        this.createdAt = Instant.now();
     }
 }

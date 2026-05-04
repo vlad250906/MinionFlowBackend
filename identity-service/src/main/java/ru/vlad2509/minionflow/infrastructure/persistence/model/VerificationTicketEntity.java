@@ -18,7 +18,7 @@ public class VerificationTicketEntity extends PanacheEntityBase {
     @Id
     @GeneratedValue
     @Column(name = "id")
-    long id;
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -41,12 +41,13 @@ public class VerificationTicketEntity extends PanacheEntityBase {
     public VerificationTicketEntity() {
     }
 
-    public VerificationTicketEntity(UserEntity user, VerificationTicketType type, UUID verificationToken, Instant validFrom, Instant validTo) {
+    public VerificationTicketEntity(Long id, UserEntity user, VerificationTicketType type, UUID verificationToken, Instant validFrom, Instant validTo) {
         this.user = user;
         this.type = type;
         this.verificationToken = verificationToken;
         this.validFrom = validFrom;
         this.validTo = validTo;
+        this.id = id;
     }
 
     public VerificationTicket toDomain() {
@@ -54,7 +55,8 @@ public class VerificationTicketEntity extends PanacheEntityBase {
     }
 
     public static VerificationTicketEntity fromDomain(VerificationTicket verificationTicket) {
-        return new VerificationTicketEntity(UserEntity.fromDomain(verificationTicket.getUser()),
+        return new VerificationTicketEntity(verificationTicket.getInternalId(),
+                UserEntity.fromDomain(verificationTicket.getUser()),
                 verificationTicket.getType(), verificationTicket.getVerificationToken(),
                 verificationTicket.getValidFrom(), verificationTicket.getValidTo());
     }

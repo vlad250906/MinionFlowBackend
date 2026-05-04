@@ -26,7 +26,7 @@ public class UserChangeEventPublisher extends EventPublisher<UserChange> {
     protected Channel setupChannel() {
         Channel channel = connectionManager.requestChannel();
         super.rabbitService.initQueue(channel, QUEUE, true);
-        super.rabbitService.enableConfirmSending(channel);
+        rabbitService.enableConfirmListener(channel, outboxService::ack, outboxService::nack);
         return channel;
     }
 

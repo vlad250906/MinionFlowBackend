@@ -12,7 +12,7 @@ import java.util.Optional;
 @ApplicationScoped
 public class InboxRepository implements PanacheRepository<InboxMessage> {
 
-    @ConfigProperty(name = "artifact-service.max-attempts-inbox", defaultValue = "5")
+    @ConfigProperty(name = "service-common.max-attempts-inbox", defaultValue = "5")
     int maxAttempts;
 
     @Transactional

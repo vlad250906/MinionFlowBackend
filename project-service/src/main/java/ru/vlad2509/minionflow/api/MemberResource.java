@@ -42,7 +42,6 @@ public class MemberResource {
         return PaginatedResponse.of(context, memberService.getMembers(context, tokenService.parseJwt(jwt), projectId));
     }
 
-    // TODO: Система инвайтов с оповещением по почте (точно не MVP)??
     @POST
     @Path("")
     @Authenticated

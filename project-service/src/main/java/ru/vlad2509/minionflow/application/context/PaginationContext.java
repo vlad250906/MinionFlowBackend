@@ -13,6 +13,10 @@ public class PaginationContext {
     public PaginationContext(int pageSize, int pageIndex) {
         this.pageSize = pageSize;
         this.pageIndex = pageIndex;
+        if (pageSize < 0)
+            throw new IllegalArgumentException("Page size must be greater than zero");
+        if (pageIndex < 0)
+            throw new IllegalArgumentException("Page index must be greater than zero");
     }
 
     public void acceptResult(int total, int pageCount) {

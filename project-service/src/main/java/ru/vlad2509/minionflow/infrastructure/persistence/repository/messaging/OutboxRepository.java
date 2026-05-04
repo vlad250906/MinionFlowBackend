@@ -3,6 +3,8 @@ package ru.vlad2509.minionflow.infrastructure.persistence.repository.messaging;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,23 +20,39 @@ public class OutboxRepository implements PanacheRepository<OutboxMessage> {
 
     private static final Logger LOG = LoggerFactory.getLogger(OutboxRepository.class);
 
+    @Inject
+    EntityManager em;
+
     @Transactional
     public Optional<OutboxMessage> findByMessageId(String messageId) {
         return find("messageId = ?1", messageId).singleResultOptional();
     }
 
     @Transactional
+    @SuppressWarnings("unchecked")
     public List<OutboxMessage> leaseBatch(int batchSize, int instanceId, int leasePeriod) {
-        Instant now = Instant.now();
-
-        List<OutboxMessage> messages = this.find("status = ?1 and (leasedBy < 0 or (leasedUntil is not null and leasedUntil < ?2)) and (nextAttemptAt is null or nextAttemptAt < ?2)",
-                        MessageStatus.PENDING, now)
-                .page(Page.ofSize(batchSize)).list();
-
-        List<Long> ids = messages.stream().map(msg -> msg.id).toList();
-        this.update("leasedBy = ?1, leasedUntil = ?2 where id in ?3", instanceId, now.plusSeconds(leasePeriod), ids);
-
-        return messages;
+        return em.createNativeQuery("""
+                with ids as (
+                    select id
+                    from outbox_messages
+                    where status = 'PENDING'
+                        and (leased_by < 0 or (leased_until is not null and leased_until < :now)) 
+                        and (next_attempt_at is null or next_attempt_at < :now)
+                    order by created_at desc
+                    limit :limit
+                    for update skip locked 
+                )
+                update outbox_messages msg
+                set leased_by = :instanceId, leased_until = :leasedUntil
+                from ids
+                where msg.id = ids.id
+                returning msg.*
+                """, OutboxMessage.class)
+                .setParameter("now", Instant.now())
+                .setParameter("limit", batchSize)
+                .setParameter("instanceId", instanceId)
+                .setParameter("leasedUntil", Instant.now().plusSeconds(leasePeriod))
+                .getResultList();
     }
 
     @Transactional

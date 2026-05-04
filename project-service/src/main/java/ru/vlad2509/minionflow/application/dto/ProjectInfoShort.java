@@ -1,6 +1,6 @@
 package ru.vlad2509.minionflow.application.dto;
 
-import ru.vlad2509.minionflow.domain.ProjectNameVo;
+import ru.vlad2509.minionflow.domain.vo.ProjectNameVo;
 
 import java.util.UUID;
 

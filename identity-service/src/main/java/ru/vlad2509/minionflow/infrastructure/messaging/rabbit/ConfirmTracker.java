@@ -28,7 +28,7 @@ public class ConfirmTracker {
     }
 
     public void processSeq(long seq, boolean multiple, String error) {
-        //System.out.println("PROCESS SEQ: " + seq);
+        System.out.println("PROCESS SEQ: " + seq);
         if (!shouldProcess)
             return;
         List<String> toConfirm = new ArrayList<String>();

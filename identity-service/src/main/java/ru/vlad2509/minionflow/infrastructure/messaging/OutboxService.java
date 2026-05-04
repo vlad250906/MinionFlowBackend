@@ -47,6 +47,7 @@ public class OutboxService {
     }
 
     public void registerSender(String queue, EventPublisher<?> sender) {
+        LOG.info("Registering sender for queue: {}", queue);
         senders.put(queue, sender);
     }
 

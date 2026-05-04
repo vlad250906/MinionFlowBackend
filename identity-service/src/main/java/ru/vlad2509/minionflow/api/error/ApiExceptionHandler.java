@@ -9,6 +9,8 @@ import io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveViolationExc
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.UnauthorizedException;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.NotFoundException;
@@ -22,6 +24,7 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import ru.vlad2509.minionflow.application.exception.ApiException;
+import ru.vlad2509.minionflow.application.exception.ConstraintExceptionMapper;
 
 import java.util.List;
 
@@ -31,6 +34,9 @@ public class ApiExceptionHandler {
 
     private static final Logger LOG = Logger.getLogger(ApiExceptionHandler.class);
     private static final String PROBLEM_JSON = "application/problem+json";
+
+    @Inject
+    ConstraintExceptionMapper constraintExceptionMapper;
 
     @ServerExceptionMapper
     public RestResponse<ApiErrorResponse> mapUnauthorized(UnauthorizedException ex, UriInfo uriInfo, ContainerRequestContext req) {
@@ -58,6 +64,11 @@ public class ApiExceptionHandler {
     @ServerExceptionMapper
     public RestResponse<ApiErrorResponse> mapJsonMapping(JsonMappingException ex, UriInfo uriInfo, ContainerRequestContext req) {
         return build(400, "invalidJson", "Invalid JSON", ex.getOriginalMessage(), uriInfo, req, null);
+    }
+
+    @ServerExceptionMapper
+    public RestResponse<ApiErrorResponse> mapNotFound(PersistenceException ex, UriInfo uriInfo, ContainerRequestContext req) {
+        return mapApi(constraintExceptionMapper.mapPersistenceException(ex), uriInfo, req);
     }
 
     @ServerExceptionMapper

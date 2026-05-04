@@ -10,14 +10,18 @@ import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.messaging.ProjectMemberChange;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.domain.MemberRole;
-import ru.vlad2509.minionflow.domain.ProjectNameVo;
-import ru.vlad2509.minionflow.domain.ProjectPermission;
+import ru.vlad2509.minionflow.domain.Member;
+import ru.vlad2509.minionflow.domain.Project;
+import ru.vlad2509.minionflow.domain.enums.MemberRole;
+import ru.vlad2509.minionflow.domain.vo.ProjectNameVo;
+import ru.vlad2509.minionflow.domain.enums.ProjectPermission;
 import ru.vlad2509.minionflow.infrastructure.messaging.events.MemberChangeEventPublisher;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Member;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Project;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.MemberEntity;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.ProjectEntity;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.RemoteUser;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.MemberRepository;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.ProjectRepository;
+import ru.vlad2509.minionflow.infrastructure.persistence.repository.RemoteUserRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,31 +43,32 @@ public class ProjectService {
 
     @Transactional
     public ProjectInfo createProject(UserContext context, ProjectNameVo projectName, String projectDescription) {
-        if (projectRepository.findByName(projectName).isPresent())
-            throw new ApiException(ApiError.PROJECT_ALREADY_EXISTS);
+//        if (projectRepository.findByName(projectName).isPresent())
+//            throw new ApiException(ApiError.PROJECT_ALREADY_EXISTS);
 
         Project project = new Project(projectName, projectDescription);
-        Member member = new Member(project, context.userId(), MemberRole.OWNER);
+        Member member = new Member(project, context.userId(), MemberRole.OWNER, null);
 
-        projectRepository.persist(project);
-        memberRepository.persist(member);
-        memberChangeEventPublisher.publish(new ProjectMemberChange(project.id, member.userId, member.role));
+        projectRepository.create(project);
+        memberRepository.create(member);
+        memberChangeEventPublisher.publish(new ProjectMemberChange(project.getId(), member.getUserId(), member.getRole()));
 
-        return new ProjectInfo(project.id, project.getProjectName(), project.projectDescription);
+        return new ProjectInfo(project.getId(), projectName, project.getProjectDescription());
     }
 
     @Transactional
     public ProjectInfo updateProject(UserContext context, UUID projectId, ProjectNameVo projectName, String projectDescription) {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_UPDATE_GENERAL);
 
-        if (projectRepository.findByName(projectName).isPresent())
-            throw new ApiException(ApiError.PROJECT_ALREADY_EXISTS);
+//        if (projectRepository.findByName(projectName).isPresent())
+//            throw new ApiException(ApiError.PROJECT_ALREADY_EXISTS);
 
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND));
-        project.projectName = projectName.value();
-        project.projectDescription = projectDescription;
+        project.setProjectName(projectName);
+        project.setProjectDescription(projectDescription);
+        projectRepository.update(project);
 
-        return new ProjectInfo(projectId, project.getProjectName(), project.projectDescription);
+        return new ProjectInfo(projectId, project.getProjectNameVo(), project.getProjectDescription());
     }
 
     @Transactional
@@ -77,12 +82,12 @@ public class ProjectService {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_READ);
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND));
 
-        return new ProjectInfo(projectId, project.getProjectName(), project.projectDescription);
+        return new ProjectInfo(projectId, project.getProjectNameVo(), project.getProjectDescription());
     }
 
     public List<ProjectInfoShort> getProjects(PaginationContext paginationContext, UserContext userContext) {
         return memberRepository.findAllProjects(paginationContext, userContext.userId()).stream()
-                .map(project -> new ProjectInfoShort(project.id, project.getProjectName())).toList();
+                .map(project -> new ProjectInfoShort(project.getId(), project.getProjectNameVo())).toList();
     }
 
 }

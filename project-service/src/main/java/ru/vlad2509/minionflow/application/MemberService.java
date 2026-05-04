@@ -9,11 +9,13 @@ import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.messaging.ProjectMemberChange;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.domain.MemberRole;
-import ru.vlad2509.minionflow.domain.ProjectPermission;
+import ru.vlad2509.minionflow.domain.Member;
+import ru.vlad2509.minionflow.domain.Project;
+import ru.vlad2509.minionflow.domain.enums.MemberRole;
+import ru.vlad2509.minionflow.domain.enums.ProjectPermission;
 import ru.vlad2509.minionflow.infrastructure.messaging.events.MemberChangeEventPublisher;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Member;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Project;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.MemberEntity;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.ProjectEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.RemoteUser;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.MemberRepository;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.ProjectRepository;
@@ -51,16 +53,16 @@ public class MemberService {
         if (memberRepository.findByProjectUserId(projectId, user.userId).isPresent())
             throw new ApiException(ApiError.ALREADY_MEMBER);
 
-        if (role == MemberRole.OWNER)
-            throw new ApiException(ApiError.OWNER_CONFLICT);
+//        if (role == MemberRole.OWNER)
+//            throw new ApiException(ApiError.OWNER_CONFLICT);
 
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND));
-        Member member = new Member(project, user.userId, role);
-        memberRepository.persist(member);
+        Member member = new Member(project, user.userId, role, user.username);
+        memberRepository.create(member);
         onMemberUpdate(new ProjectMemberChange(projectId, user.userId, role));
 
-        return new ProjectMember(projectId, member.userId, user.username == null ? "@undefined" : user.username,
-                member.role.toString(), member.memberSince);
+        return new ProjectMember(projectId, member.getUserId(), user.username,
+                member.getRole().toString(), member.getMemberSince());
     }
 
     @Transactional
@@ -68,16 +70,17 @@ public class MemberService {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_MEMBER_UPDATE);
 
         if (userId.equals(context.userId()) && role != MemberRole.OWNER)
-            throw new ApiException(ApiError.OWNER_LEAVE, "project suicide denied 2.0");
+            throw new ApiException(ApiError.OWNER_LEAVE, "only another owner can remove your owner role");
 
         Member member = memberRepository.findByProjectUserId(projectId, userId)
                 .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "not a member of project"));
 
-        member.role = role;
+        member.setRole(role);
+        memberRepository.updateRole(member);
         onMemberUpdate(new ProjectMemberChange(projectId, userId, role));
 
-        return new ProjectMember(projectId, userId, member.remoteUser.username == null ? "@undefined" : member.remoteUser.username,
-                role.toString(), member.memberSince);
+        return new ProjectMember(projectId, userId, member.getRemoteUsername() == null ? "@undefined" : member.getRemoteUsername(),
+                role.toString(), member.getMemberSince());
     }
 
     @Transactional
@@ -85,7 +88,7 @@ public class MemberService {
         tokenService.authorize(context, projectId, ProjectPermission.PROJECT_DELETE);
 
         if (userId.equals(context.userId()))
-            throw new ApiException(ApiError.OWNER_LEAVE, "project suicide denied");
+            throw new ApiException(ApiError.OWNER_LEAVE, "only another owner can kick you from project");
 
         if (memberRepository.deleteByProjectUser(projectId, userId) <= 0)
             throw new ApiException(ApiError.PROJECT_NOT_FOUND);
@@ -98,17 +101,17 @@ public class MemberService {
 
         Member member = memberRepository.findByProjectUserId(projectId, userId)
                 .orElseThrow(() -> new ApiException(ApiError.MEMBER_NOT_FOUND));
-        return new ProjectMember(projectId, userId, member.remoteUser.username == null ? "@undefined" : member.remoteUser.username,
-                member.role.toString(), member.memberSince);
+        return new ProjectMember(projectId, userId, member.getRemoteUsername() == null ? "@undefined" : member.getRemoteUsername(),
+                member.getRole().toString(), member.getMemberSince());
     }
 
     public List<ProjectMember> getMembers(PaginationContext paginationContext, UserContext userContext, UUID projectId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.PROJECT_READ);
 
         return memberRepository.findAllMembers(paginationContext, projectId).stream()
-                .map(member -> new ProjectMember(projectId, member.userId,
-                        member.remoteUser.username == null ? "@undefined" : member.remoteUser.username,
-                        member.role.toString(), member.memberSince)).toList();
+                .map(memberEntity -> new ProjectMember(projectId, memberEntity.getUserId(),
+                        memberEntity.getRemoteUsername() == null ? "@undefined" : memberEntity.getRemoteUsername(),
+                        memberEntity.getRole().toString(), memberEntity.getMemberSince())).toList();
     }
 
     private void onMemberUpdate(ProjectMemberChange change) {

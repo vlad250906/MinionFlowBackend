@@ -7,8 +7,8 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.domain.MemberRole;
-import ru.vlad2509.minionflow.domain.ProjectPermission;
+import ru.vlad2509.minionflow.domain.enums.MemberRole;
+import ru.vlad2509.minionflow.domain.enums.ProjectPermission;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.MemberRepository;
 
 import java.util.Arrays;
@@ -42,7 +42,7 @@ public class TokenService {
     @Transactional
     public void authorize(UserContext userContext, UUID projectId, ProjectPermission... permissions) {
         MemberRole role = memberRepository.findByProjectUserId(projectId, userContext.userId())
-                .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project or it does not exist")).role;
+                .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project or it does not exist")).getRole();
         if (!Arrays.stream(permissions).allMatch(permission -> role.getPermissions().contains(permission)))
             throw new ApiException(ApiError.INSUFFICIENT_PERMISSION, "not enough permissions");
     }

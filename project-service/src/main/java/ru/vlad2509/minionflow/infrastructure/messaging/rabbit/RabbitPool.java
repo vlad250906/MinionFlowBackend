@@ -14,7 +14,7 @@ public class RabbitPool {
 
     private final ExecutorService executor;
 
-    public RabbitPool(@ConfigProperty(name = "artifact-service.rabbit-pool-size", defaultValue = "4") int poolSize) {
+    public RabbitPool(@ConfigProperty(name = "service-common.rabbit-pool-size", defaultValue = "4") int poolSize) {
         this.executor = Executors.newFixedThreadPool(poolSize);
     }
 

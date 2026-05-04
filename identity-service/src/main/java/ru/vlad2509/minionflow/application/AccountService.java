@@ -51,15 +51,13 @@ public class AccountService {
         String passwordHash = passwordService.hashNew(password);
         User user = new User(email.value(), username.value(), passwordHash);
 
-        if (!userRepository.create(user)) {
-            if (userRepository.findByEmailOptional(email).isPresent())
-                throw new ApiException(ApiError.EMAIL_TAKEN);
+        if (userRepository.findByEmailOptional(email).isPresent())
+            throw new ApiException(ApiError.EMAIL_TAKEN);
 
-            if (userRepository.findByUsernameOptional(username).isPresent())
-                throw new ApiException(ApiError.USERNAME_TAKEN);
+        if (userRepository.findByUsernameOptional(username).isPresent())
+            throw new ApiException(ApiError.USERNAME_TAKEN);
 
-            throw new ApiException(ApiError.USERNAME_TAKEN); // email не может быть изменен, поэтому скажем об ошибке юзернейма
-        }
+        userRepository.create(user);
 
         VerificationTicket ticket = new VerificationTicket(user,
                 VerificationTicketType.REGISTER_TICKET, UUID.randomUUID(), registrationTokenTtl);

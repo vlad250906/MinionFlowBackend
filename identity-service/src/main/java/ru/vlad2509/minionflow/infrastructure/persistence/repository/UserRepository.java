@@ -47,14 +47,9 @@ public class UserRepository implements PanacheRepository<UserEntity> {
         return this.update("status = ?1 where id = ?2", user.getStatus(), user.getId()) > 0;
     }
 
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public boolean create(User user) {
-        try {
-            this.persist(new UserEntity(user.getId(), user.getEmail(), user.getUsername(), user.getPasswordHash(), user.getStatus()));
-            this.flush();
-            return true;
-        } catch (PersistenceException ex) {
-            return false;
-        }
+    @Transactional
+    public void create(User user) {
+        this.persist(new UserEntity(user.getId(), user.getEmail(), user.getUsername(), user.getPasswordHash(), user.getStatus()));
+        this.flush();
     }
 }
