@@ -2,7 +2,7 @@ package ru.vlad2509.minionflow.infrastructure.persistence.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import ru.vlad2509.minionflow.domain.model.MemberRole;
+import ru.vlad2509.minionflow.domain.model.enums.MemberRole;
 
 import java.util.UUID;
 
@@ -14,13 +14,13 @@ public class RemoteProjectMember extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(nullable = false)
+    @Column(name = "project_id", nullable = false)
     public UUID projectId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     public UUID userId;
 
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     public MemberRole role;
 

@@ -1,7 +1,9 @@
 package ru.vlad2509.minionflow.infrastructure.messaging;
 
 import com.rabbitmq.client.Channel;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import ru.vlad2509.minionflow.infrastructure.messaging.rabbit.RabbitService;
 
@@ -22,8 +24,7 @@ public abstract class EventPublisher<T> {
         this.queueName = queueName;
     }
 
-    @PostConstruct
-    private void init(){
+    void init(@Observes StartupEvent event){
         outboxService.registerSender(queueName, this);
     }
 

@@ -1,7 +1,8 @@
 package ru.vlad2509.minionflow.application.dto;
 
-import ru.vlad2509.minionflow.domain.model.execution.ExecutionConfig;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.ExecutionConfigJpa;
+import ru.vlad2509.minionflow.domain.model.ExecutionConfig;
+import ru.vlad2509.minionflow.domain.model.execution.ExecutionConfigContent;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.ExecutionConfigEntity;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -12,11 +13,12 @@ public record ExecutionConfigDto(
         UUID projectId,
         UUID ownerId,
         Instant createdAt,
-        ExecutionConfig config
+        ExecutionConfigContent config
 ) {
 
-    public static ExecutionConfigDto fromJpa(ExecutionConfigJpa entity) {
-        return new ExecutionConfigDto(entity.id, entity.alias, entity.projectId, entity.userId, entity.createdAt, entity.content);
+    public static ExecutionConfigDto fromDomain(ExecutionConfig entity) {
+        return new ExecutionConfigDto(entity.getId(), entity.getAlias(), entity.getProjectId(), entity.getUserId(),
+                entity.getCreatedAt(), entity.getContent());
     }
 
 }

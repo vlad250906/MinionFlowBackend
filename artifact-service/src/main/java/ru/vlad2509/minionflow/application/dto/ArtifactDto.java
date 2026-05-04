@@ -1,6 +1,7 @@
 package ru.vlad2509.minionflow.application.dto;
 
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Artifact;
+import ru.vlad2509.minionflow.domain.model.Artifact;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.ArtifactEntity;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,9 +17,9 @@ public record ArtifactDto(
 
 ) {
 
-    public static ArtifactDto fromJpa(Artifact artifact) {
-        return new ArtifactDto(artifact.id, artifact.size, artifact.originalName, artifact.contentType,
-                artifact.createdAt, artifact.userId);
+    public static ArtifactDto fromDomain(Artifact artifact) {
+        return new ArtifactDto(artifact.getId(), artifact.getSize(), artifact.getOriginalName(), artifact.getContentType(),
+                artifact.getCreatedAt(), artifact.getUserId());
     }
 
 }

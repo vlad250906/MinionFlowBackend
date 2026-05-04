@@ -11,10 +11,11 @@ import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.domain.exception.ExecutionConfigException;
-import ru.vlad2509.minionflow.domain.model.ProjectPermission;
-import ru.vlad2509.minionflow.domain.model.execution.ExecutionConfig;
+import ru.vlad2509.minionflow.domain.model.ExecutionConfig;
+import ru.vlad2509.minionflow.domain.model.enums.ProjectPermission;
+import ru.vlad2509.minionflow.domain.model.execution.ExecutionConfigContent;
 import ru.vlad2509.minionflow.domain.service.ExecutionConfigValidator;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.ExecutionConfigJpa;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.ExecutionConfigEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.ExecutionConfigRepository;
 
 import java.util.List;
@@ -32,26 +33,26 @@ public class ExecutionConfigService {
     @Inject
     ExecutionConfigValidator executionConfigValidator;
 
-    public ExecutionConfigDto createExecutionConfig(UserContext userContext, UUID projectId, String alias, ExecutionConfig executionConfig) {
+    public ExecutionConfigDto createExecutionConfig(UserContext userContext, UUID projectId, String alias, ExecutionConfigContent executionConfigContent) {
         tokenService.authorize(userContext, projectId, ProjectPermission.CONFIG_WRITE);
         try {
-            executionConfigValidator.validate(executionConfig);
+            executionConfigValidator.validate(executionConfigContent);
         } catch (ExecutionConfigException ex) {
             throw new ApiException(ApiError.INVALID_EXECUTION_CONFIG.getHttpStatusCode(), ApiError.INVALID_EXECUTION_CONFIG.getErrorCode(), ex.getMessage());
         }
-        ExecutionConfigJpa executionConfigJpa = new ExecutionConfigJpa(alias, projectId, userContext.userId(), executionConfig);
-        executionConfigRepository.createExecutionConfig(executionConfigJpa);
-        return ExecutionConfigDto.fromJpa(executionConfigJpa);
+        ExecutionConfig executionConfig = new ExecutionConfig(alias, projectId, userContext.userId(), executionConfigContent);
+        executionConfigRepository.create(executionConfig);
+        return ExecutionConfigDto.fromDomain(executionConfig);
     }
 
-    public ExecutionConfigDto updateExecutionConfig(UserContext userContext, UUID projectId, UUID configId, String alias, ExecutionConfig executionConfig) {
+    public ExecutionConfigDto updateExecutionConfig(UserContext userContext, UUID projectId, UUID configId, String alias, ExecutionConfigContent executionConfigContent) {
         tokenService.authorize(userContext, projectId, ProjectPermission.CONFIG_WRITE);
         try {
-            executionConfigValidator.validate(executionConfig);
+            executionConfigValidator.validate(executionConfigContent);
         } catch (ExecutionConfigException ex) {
             throw new ApiException(ApiError.INVALID_EXECUTION_CONFIG.getHttpStatusCode(), ApiError.INVALID_EXECUTION_CONFIG.getErrorCode(), ex.getMessage());
         }
-        return transactionalUpdate(configId, alias, executionConfig);
+        return transactionalUpdate(configId, alias, executionConfigContent);
     }
 
     public void deleteExecutionConfig(UserContext userContext, UUID projectId, UUID configId) {
@@ -62,22 +63,22 @@ public class ExecutionConfigService {
 
     public ExecutionConfigDto getExecutionConfig(UserContext userContext, UUID projectId, UUID artifactId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.CONFIG_READ);
-        ExecutionConfigJpa executionConfigJpa = executionConfigRepository.findById(artifactId)
+        ExecutionConfig executionConfig = executionConfigRepository.findById(artifactId)
                 .orElseThrow(() -> new ApiException(ApiError.EXECUTION_CONFIG_NOT_FOUND));
-        return ExecutionConfigDto.fromJpa(executionConfigJpa);
+        return ExecutionConfigDto.fromDomain(executionConfig);
     }
 
     public List<ExecutionConfigLight> getExecutionConfigs(UserContext userContext, PaginationContext paginationContext, UUID projectId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.CONFIG_READ);
-        return executionConfigRepository.findAllProjectConfigs(paginationContext, projectId).stream()
-                .map(ExecutionConfigLight::fromJpa).toList();
+        return executionConfigRepository.findAllProjectConfigs(paginationContext, projectId);
     }
 
     @Transactional
-    ExecutionConfigDto transactionalUpdate(UUID configId, String alias, ExecutionConfig executionConfig) {
-        ExecutionConfigJpa configJpa = executionConfigRepository.findById(configId).orElseThrow(() -> new ApiException(ApiError.EXECUTION_CONFIG_NOT_FOUND));
-        configJpa.alias = alias;
-        configJpa.content = executionConfig;
-        return ExecutionConfigDto.fromJpa(configJpa);
+    ExecutionConfigDto transactionalUpdate(UUID configId, String alias, ExecutionConfigContent executionConfigContent) {
+        ExecutionConfig config = executionConfigRepository.findById(configId).orElseThrow(() -> new ApiException(ApiError.EXECUTION_CONFIG_NOT_FOUND));
+        config.setAlias(alias);
+        config.setContent(executionConfigContent);
+        executionConfigRepository.update(config);
+        return ExecutionConfigDto.fromDomain(config);
     }
 }

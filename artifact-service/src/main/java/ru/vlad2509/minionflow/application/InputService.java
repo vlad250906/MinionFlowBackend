@@ -13,10 +13,12 @@ import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.ArtifactService;
 import ru.vlad2509.minionflow.application.util.StorageKeyFactory;
 import ru.vlad2509.minionflow.application.util.TokenService;
-import ru.vlad2509.minionflow.domain.model.ArtifactType;
-import ru.vlad2509.minionflow.domain.model.InputType;
-import ru.vlad2509.minionflow.domain.model.ProjectPermission;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.InputArtifact;
+import ru.vlad2509.minionflow.domain.model.Artifact;
+import ru.vlad2509.minionflow.domain.model.InputArtifact;
+import ru.vlad2509.minionflow.domain.model.enums.ArtifactType;
+import ru.vlad2509.minionflow.domain.model.enums.InputType;
+import ru.vlad2509.minionflow.domain.model.enums.ProjectPermission;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.InputArtifactEntity;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.InputArtifactRepository;
 
 import java.util.List;
@@ -39,53 +41,63 @@ public class InputService {
 
     public InputArtifactDto createInput(UserContext userContext, UUID projectId, String alias, InputType type, FileUpload file) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
-        ArtifactDto artifact = artifactService.createArtifact(userContext, storageKeyFactory.generateInputPrefix(projectId),
+        Artifact artifact = artifactService.createArtifact(userContext, storageKeyFactory.generateInputPrefix(projectId),
                 projectId, file, ArtifactType.INPUT);
-        if (inputArtifactRepository.createInputArtifact(artifact.artifactId(), alias, type) == null)
-            throw new ApiException(ApiError.UNEXPECTED_ERROR, "artifact should've been created, but it wasn't");
-        return InputArtifactDto.fromDto(artifact, alias, type);
+        InputArtifact inputArtifact = new InputArtifact(artifact, alias, type);
+        inputArtifactRepository.createInputArtifact(inputArtifact);
+
+        return InputArtifactDto.fromDomain(inputArtifact);
     }
 
     public InputArtifactDto updateInputMetadata(UserContext userContext, UUID projectId, UUID artifactId,
                                                 String alias, InputType type) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
-        InputArtifact inputArtifact = inputArtifactRepository.update(artifactId, alias, type)
-                .orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "it should've been found, possible desync or bug??"));
-        return InputArtifactDto.fromDto(ArtifactDto.fromJpa(inputArtifact.artifact), inputArtifact.alias, inputArtifact.type);
+        InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId)
+                .orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "input artifact not found"));
+        if (!projectId.equals(inputArtifact.getProjectId()))
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
+        inputArtifact.setAlias(alias);
+        inputArtifact.setInputType(type);
+        inputArtifactRepository.update(inputArtifact);
+        return InputArtifactDto.fromDomain(inputArtifact);
     }
 
     public void deleteInput(UserContext userContext, UUID projectId, UUID artifactId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
+        if (!projectId.equals(inputArtifactRepository.findByArtifactId(artifactId).map(InputArtifact::getProjectId).orElse(null)))
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
         artifactService.deleteArtifact(userContext, artifactId);
     }
 
     public InputArtifactDto getInputMetadata(UserContext userContext, UUID projectId, UUID artifactId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_READ);
-        ArtifactDto dto = artifactService.getArtifactMetadata(userContext, artifactId);
-        InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId).orElseThrow(
-                () -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "it should've been found, possible desync or bug??"));
-
-        return InputArtifactDto.fromDto(dto, inputArtifact.alias, inputArtifact.type);
+        InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId)
+                .orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "input artifact not found"));
+        if (!projectId.equals(inputArtifact.getProjectId()))
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
+        return InputArtifactDto.fromDomain(inputArtifact);
     }
 
     public List<InputArtifactDto> getInputs(UserContext userContext, PaginationContext paginationContext, UUID projectId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_READ);
         return inputArtifactRepository.findAllProjectArtifacts(paginationContext, projectId).stream()
-                .map(ia -> InputArtifactDto.fromDto(ArtifactDto.fromJpa(ia.artifact), ia.alias, ia.type)).toList();
+                .map(InputArtifactDto::fromDomain).toList();
     }
 
     public InputArtifactDto updateInputContent(UserContext userContext, UUID projectId, UUID artifactId, FileUpload file) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
-        ArtifactDto dto = artifactService.updateArtifactContent(userContext, storageKeyFactory.generateInputPrefix(projectId),
-                projectId, artifactId, file);
+        if (!projectId.equals(inputArtifactRepository.findByArtifactId(artifactId).map(InputArtifact::getProjectId).orElse(null)))
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
+        Artifact artifact = artifactService.updateArtifactContent(userContext,
+                storageKeyFactory.generateInputPrefix(projectId), projectId, artifactId, file);
         InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId).orElseThrow(
-                () -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "it should've been found, possible desync or bug??"));
-        return InputArtifactDto.fromDto(dto, inputArtifact.alias, inputArtifact.type);
+                () -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "probably wrong type of artifact, (or u using wrong endpoint)"));
+        return InputArtifactDto.fromDomain(inputArtifact);
     }
 
     public StreamingOutput downloadInput(UserContext userContext, UUID projectId, UUID artifactId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_READ);
-        return artifactService.downloadArtifact(userContext, artifactId);
+        return artifactService.downloadArtifact(userContext, projectId, artifactId);
     }
 
 }

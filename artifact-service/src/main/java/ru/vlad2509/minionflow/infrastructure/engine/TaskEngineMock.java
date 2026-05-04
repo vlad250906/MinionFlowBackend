@@ -4,20 +4,17 @@ import com.google.common.net.MediaType;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jdk.jfr.ContentType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.hibernate.cfg.Environment;
 import ru.vlad2509.minionflow.application.ports.out.S3Service;
 import ru.vlad2509.minionflow.application.ports.out.TaskEngine;
 import ru.vlad2509.minionflow.application.ports.out.TaskStatusHandler;
 import ru.vlad2509.minionflow.application.util.StorageKeyFactory;
-import ru.vlad2509.minionflow.domain.model.TaskStatus;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.TaskRun;
+import ru.vlad2509.minionflow.domain.model.TaskRun;
+import ru.vlad2509.minionflow.domain.model.enums.TaskStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -50,7 +47,7 @@ public class TaskEngineMock implements TaskEngine {
 
         CompletableFuture.runAsync(() -> {
             try {
-                simulateLifecycle(taskRun.id, taskRun.projectId);
+                simulateLifecycle(taskRun.getId(), taskRun.getProjectId());
             } catch (InterruptedException ignore) {
 
             } catch (Exception ex) {
@@ -60,9 +57,9 @@ public class TaskEngineMock implements TaskEngine {
     }
 
     @Override
-    public void cancelTask(UUID taskId) {
+    public void cancelTask(TaskRun taskRun) {
         synchronized (lock) {
-            cancelledTasks.add(taskId);
+            cancelledTasks.add(taskRun.getId());
         }
     }
 

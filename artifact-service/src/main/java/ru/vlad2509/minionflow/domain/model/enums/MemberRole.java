@@ -1,8 +1,8 @@
-package ru.vlad2509.minionflow.domain.model;
+package ru.vlad2509.minionflow.domain.model.enums;
 
 import java.util.Set;
 
-import static ru.vlad2509.minionflow.domain.model.ProjectPermission.*;
+import static ru.vlad2509.minionflow.domain.model.enums.ProjectPermission.*;
 
 public enum MemberRole {
     OWNER(NONE, JAR_WRITE, JAR_READ, INPUT_WRITE, INPUT_READ, CONFIG_READ, CONFIG_WRITE, TASK_WRITE, TASK_READ, OUTPUT_READ),

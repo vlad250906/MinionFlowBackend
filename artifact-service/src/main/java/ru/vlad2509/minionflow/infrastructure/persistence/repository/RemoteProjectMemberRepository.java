@@ -3,7 +3,7 @@ package ru.vlad2509.minionflow.infrastructure.persistence.repository;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import ru.vlad2509.minionflow.domain.model.MemberRole;
+import ru.vlad2509.minionflow.domain.model.enums.MemberRole;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.RemoteProjectMember;
 
 import java.util.Optional;

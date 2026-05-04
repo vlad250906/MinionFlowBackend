@@ -7,8 +7,8 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
-import ru.vlad2509.minionflow.domain.model.MemberRole;
-import ru.vlad2509.minionflow.domain.model.ProjectPermission;
+import ru.vlad2509.minionflow.domain.model.enums.MemberRole;
+import ru.vlad2509.minionflow.domain.model.enums.ProjectPermission;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.RemoteProjectMemberRepository;
 
 import java.util.Arrays;

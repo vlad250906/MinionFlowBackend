@@ -3,7 +3,7 @@ package ru.vlad2509.minionflow.api.dto.request;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import ru.vlad2509.minionflow.domain.model.execution.ExecutionConfig;
+import ru.vlad2509.minionflow.domain.model.execution.ExecutionConfigContent;
 
 public record ExecutionConfigRequest (
         @NotBlank
@@ -11,6 +11,6 @@ public record ExecutionConfigRequest (
         String alias,
 
         @Valid
-        ExecutionConfig config
+        ExecutionConfigContent config
 ) {
 }

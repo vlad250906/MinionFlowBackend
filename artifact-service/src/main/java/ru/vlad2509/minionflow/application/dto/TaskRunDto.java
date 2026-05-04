@@ -1,7 +1,7 @@
 package ru.vlad2509.minionflow.application.dto;
 
-import ru.vlad2509.minionflow.domain.model.TaskStatus;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.TaskRun;
+import ru.vlad2509.minionflow.domain.model.TaskRun;
+import ru.vlad2509.minionflow.domain.model.enums.TaskStatus;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -24,12 +24,17 @@ public record TaskRunDto(
 
 ) {
 
-    public static TaskRunDto fromJpa(TaskRun jpa) {
-        return new TaskRunDto(jpa.id, jpa.projectId, jpa.userId, jpa.status,
-                jpa.jarJpa == null ? null : jpa.jarJpa.artifact.id, jpa.jarJpa == null ? null : jpa.jarJpa.alias,
-                jpa.inputJpa == null ? null : jpa.inputJpa.artifact.id, jpa.inputJpa == null ? null : jpa.inputJpa.alias,
-                jpa.executionConfig == null ? null : jpa.executionConfig.id, jpa.executionConfig == null ? null : jpa.executionConfig.alias,
-                jpa.createdAt, jpa.startedAt, jpa.finishedAt, jpa.doneAt);
+    public static TaskRunDto fromDomain(TaskRun taskRun) {
+        // :/
+        return new TaskRunDto(taskRun.getId(), taskRun.getProjectId(), taskRun.getUserId(), taskRun.getStatus(),
+                taskRun.getJarArtifact() == null ? null : taskRun.getJarArtifact().getId(),
+                taskRun.getJarArtifact() == null ? null : taskRun.getJarArtifact().getAlias(),
+                taskRun.getInputArtifact() == null ? null : taskRun.getInputArtifact().getId(),
+                taskRun.getInputArtifact() == null ? null : taskRun.getInputArtifact().getAlias(),
+                taskRun.getExecutionConfig() == null ? null : taskRun.getExecutionConfig().getId(),
+                taskRun.getExecutionConfig() == null ? null : taskRun.getExecutionConfig().getAlias(),
+                taskRun.getCreatedAt(), taskRun.getStartedAt(), taskRun.getFinishedAt(), taskRun.getDoneAt()
+                );
     }
 
 }

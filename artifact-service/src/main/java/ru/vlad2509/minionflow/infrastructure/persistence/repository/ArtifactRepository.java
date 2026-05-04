@@ -6,55 +6,57 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
-import ru.vlad2509.minionflow.domain.model.ArtifactType;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.Artifact;
-import ru.vlad2509.minionflow.infrastructure.persistence.model.StorageIdentifier;
+import ru.vlad2509.minionflow.domain.model.Artifact;
+import ru.vlad2509.minionflow.domain.model.enums.ArtifactType;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.ArtifactEntity;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.StorageIdentifierEntity;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
-public class ArtifactRepository implements PanacheRepository<Artifact> {
+public class ArtifactRepository implements PanacheRepository<ArtifactEntity> {
 
     @Inject
     StorageIdentifierRepository storageIdentifierRepository;
 
+    @Transactional
     public Optional<Artifact> findById(UUID id) {
-        return find("id = ?1", id).singleResultOptional();
+        return find("id = ?1", id).singleResultOptional().map(ArtifactEntity::toDomain);
     }
 
     @Transactional
-    public Artifact create(UUID projectId, UUID userId, ArtifactType type, long size, String originalName,
-                           String contentType, String storageKey) {
-        Artifact artifact = new Artifact(projectId, userId, type, size,
-                originalName, contentType, storageIdentifierRepository.create(storageKey));
-        this.persist(artifact);
-        return artifact;
-    }
-
-    public List<Artifact> findAllProjectArtifacts(PaginationContext context, UUID projectId, ArtifactType type) {
-        var query = find("projectId = ?1 and type = ?2", projectId, type);
-        query.page(Page.of(context.getPageIndex(), context.getPageSize()));
-        context.acceptResult((int) query.count(), query.pageCount());
-        return query.list();
+    public StorageIdentifierEntity create(Artifact artifact) {
+        StorageIdentifierEntity storageIdentifierEntity = storageIdentifierRepository.create(artifact.getStorageIdentifier().getStorageKey());
+        this.persist(ArtifactEntity.fromDomain(artifact, storageIdentifierEntity));
+        return storageIdentifierEntity;
     }
 
     @Transactional
     public long delete(UUID id) {
-        Optional<Artifact> artifact = find("id", id).singleResultOptional();
+        Optional<ArtifactEntity> artifact = find("id", id).singleResultOptional();
         if (artifact.isPresent()) {
-            storageIdentifierRepository.unUse(artifact.get().storageIdentifier);
+            storageIdentifierRepository.unUse(artifact.get().storageIdentifier.id);
             delete(artifact.get());
             return 1;
         }
         return 0;
     }
 
-    public void updateIdentifier(Artifact artifact, String newStorageKey){
-        StorageIdentifier old = artifact.storageIdentifier;
-        artifact.storageIdentifier = storageIdentifierRepository.create(newStorageKey);
-        storageIdentifierRepository.unUse(old);
+    @Transactional
+    public void updateContentMeta(Artifact artifact) {
+        ArtifactEntity entity = find("id = ?1", artifact.getId()).singleResultOptional().orElseThrow(() -> new RuntimeException("Artifact not found"));
+        StorageIdentifierEntity old = entity.storageIdentifier;
+
+        entity.contentType = artifact.getContentType();
+        entity.size = artifact.getSize();
+        entity.originalName = artifact.getOriginalName();
+
+        if (!old.storageKey.equals(artifact.getStorageIdentifier().getStorageKey())) {
+            entity.storageIdentifier = storageIdentifierRepository.create(artifact.getStorageIdentifier().getStorageKey());
+            storageIdentifierRepository.unUse(old.id);
+        }
     }
 
 }
