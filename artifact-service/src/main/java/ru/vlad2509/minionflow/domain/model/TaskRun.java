@@ -26,12 +26,13 @@ public class TaskRun {
     private Instant startedAt;
     private Instant finishedAt;
     private Instant doneAt;
+    private boolean outputReady;
 
     // жесть конструктор :\
     public TaskRun(UUID id, UUID projectId, UUID userId, TaskStatus status, StorageIdentifier jarArtifactIdentifier,
                    StorageIdentifier inputArtifactIdentifier, JarArtifact jarArtifact, InputArtifact inputArtifact,
                    ExecutionConfig executionConfig, ExecutionType taskType, Set<Artifact> outputs, Instant createdAt, Instant startedAt,
-                   Instant finishedAt, Instant doneAt) {
+                   Instant finishedAt, Instant doneAt, boolean outputReady) {
         this.id = id;
         this.projectId = projectId;
         this.userId = userId;
@@ -47,6 +48,7 @@ public class TaskRun {
         this.startedAt = startedAt;
         this.finishedAt = finishedAt;
         this.doneAt = doneAt;
+        this.outputReady = outputReady;
     }
 
     public TaskRun(UUID projectId, UUID userId, StorageIdentifier jarArtifactIdentifier,
@@ -67,6 +69,7 @@ public class TaskRun {
         this.startedAt = null;
         this.finishedAt = null;
         this.doneAt = null;
+        this.outputReady = false;
     }
 
     public UUID getId() {
@@ -129,8 +132,16 @@ public class TaskRun {
         return doneAt;
     }
 
+    public boolean isOutputReady() {
+        return outputReady;
+    }
+
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    public void setOutputReady(boolean outputReady) {
+        this.outputReady = outputReady;
     }
 
     public void addOutputs(List<Artifact> outputs) {

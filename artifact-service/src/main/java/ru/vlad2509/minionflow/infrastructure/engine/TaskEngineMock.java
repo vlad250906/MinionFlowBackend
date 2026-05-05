@@ -5,9 +5,16 @@ import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import ru.vlad2509.minionflow.application.dto.engine.EngineTaskStatus;
+import ru.vlad2509.minionflow.application.dto.engine.MicrotaskLog;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessMicrotaskRun;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskState;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmAgent;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmMicrotaskRun;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmTaskState;
 import ru.vlad2509.minionflow.application.ports.out.S3Service;
 import ru.vlad2509.minionflow.application.ports.out.TaskEngine;
-import ru.vlad2509.minionflow.application.ports.out.TaskStatusHandler;
+import ru.vlad2509.minionflow.application.ports.out.TaskPatchHandler;
 import ru.vlad2509.minionflow.application.util.StorageKeyFactory;
 import ru.vlad2509.minionflow.domain.model.TaskRun;
 import ru.vlad2509.minionflow.domain.model.enums.TaskStatus;
@@ -29,7 +36,7 @@ public class TaskEngineMock implements TaskEngine {
     @Inject
     StorageKeyFactory storageKeyFactory;
 
-    private TaskStatusHandler taskStatusHandler;
+    private TaskPatchHandler taskPatchHandler;
     private final ExecutorService customExecutor;
     private final Random random = new Random();
     private Set<UUID> cancelledTasks = new HashSet<>();
@@ -43,7 +50,7 @@ public class TaskEngineMock implements TaskEngine {
     @Override
     public void startTask(TaskRun taskRun) {
         Objects.requireNonNull(taskRun);
-        Objects.requireNonNull(taskStatusHandler);
+        Objects.requireNonNull(taskPatchHandler);
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -64,37 +71,67 @@ public class TaskEngineMock implements TaskEngine {
     }
 
     @Override
-    public void registerStatusHandler(TaskStatusHandler handler) {
-        taskStatusHandler = handler;
+    public List<MicrotaskLog> getMicrotaskLogs(UUID microtaskId, int afterSeq, int limit) {
+        return List.of();
+    }
+
+    @Override
+    public StatelessTaskState getStatelessState(TaskRun taskRun) {
+        return null;
+    }
+
+    @Override
+    public StatelessMicrotaskRun getStatelessMicrotask(TaskRun taskRun, UUID microtaskId) {
+        return null;
+    }
+
+    @Override
+    public SwarmTaskState getSwarmState(TaskRun taskRun) {
+        return null;
+    }
+
+    @Override
+    public SwarmMicrotaskRun getSwarmMicrotask(TaskRun taskRun, UUID microtaskId) {
+        return null;
+    }
+
+    @Override
+    public SwarmAgent getSwarmAgent(TaskRun taskRun, UUID agentId) {
+        return null;
+    }
+
+    @Override
+    public void registerPatchHandler(TaskPatchHandler handler) {
+        taskPatchHandler = handler;
     }
 
     private void simulateLifecycle(UUID taskId, UUID projectId) throws InterruptedException {
-        checkAndUpdate(taskId, TaskStatus.STARTING);
+        checkAndUpdate(taskId, EngineTaskStatus.STARTING);
         Thread.sleep(3 * 1000);
-        checkAndUpdate(taskId, TaskStatus.RUNNING);
+        checkAndUpdate(taskId, EngineTaskStatus.RUNNING);
         Thread.sleep(7 * 1000);
         if (random.nextInt(10) < 3) {
-            checkAndUpdate(taskId, TaskStatus.FAILED);
+            checkAndUpdate(taskId, EngineTaskStatus.FAILED);
             return;
         }
-        checkAndUpdate(taskId, TaskStatus.FINISHED);
+        checkAndUpdate(taskId, EngineTaskStatus.SUCCEEDED);
         Thread.sleep(2 * 1000);
 
-        checkAndUpdate(taskId, uploadRandomOutput(taskId, projectId) ? TaskStatus.DONE : TaskStatus.FAILED);
+        checkAndUpdate(taskId, uploadRandomOutput(taskId, projectId) ? EngineTaskStatus.SUCCEEDED : EngineTaskStatus.SUCCEEDED);
     }
 
-    private void checkAndUpdate(UUID taskId, TaskStatus newStatus) throws InterruptedException {
+    private void checkAndUpdate(UUID taskId, EngineTaskStatus newStatus) throws InterruptedException {
         boolean cancelled = false;
         synchronized (lock) {
             if (cancelledTasks.contains(taskId)) {
                 cancelled = true;
             }
         }
-        if (cancelled) {
-            taskStatusHandler.updateTaskStatus(taskId, TaskStatus.CANCELED);
-            throw new InterruptedException();
-        }
-        taskStatusHandler.updateTaskStatus(taskId, newStatus);
+//        if (cancelled) {
+//            taskPatchHandler.updateTaskStatus(taskId, TaskStatus.CANCELED);
+//            throw new InterruptedException();
+//        }
+        taskPatchHandler.updateTaskStatus(taskId, newStatus);
     }
 
     private boolean uploadRandomOutput(UUID taskId, UUID projectId) {

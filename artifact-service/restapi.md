@@ -39,12 +39,15 @@ Tasks (запуски)
 - GET /api/v1/projects/{projectId}/tasks/{taskId} - получить запуск (всё что есть, агрегированное)
 - PATCH /api/v1/projects/{projectId}/tasks/{taskId} - отмена запуска
 - GET /api/v1/projects/{projectId}/inputs/{inputId}/outputs - получить список выходных файлов (метаданные)
-
+- GET  /api/v1/projects/{projectId}/tasks/{taskId}/logs/{microtaskId}?afterSeq=x&limit=y - бэклог с x размера y
+- GET  /api/v2/projects/{projectId}/tasks/{taskId}/stats/stateless - стата по задаче stateless с engine
+- GET /api/v2/projects/{projectId}/tasks/{taskId}/microtasks/stateless/{microtaskId} - стата по микрозадаче stateless с engine
+- GET  /api/v2/projects/{projectId}/tasks/taskId}/stats/swarm - стата по задаче swarm с engine
+- GET  /api/v2/projects/{projectId}/tasks/taskId}/microtasks/swarm/{microtaskId} - стата по микрозадаче swarm с engine
+- GET /api/v2/projects/{projectId}/tasks/{taskId}/agents/{agentId} - стата по агенту swarm
 
 - GET /api/v1/projects/{projectId}/outputs/{outputId} - получить метаданные выходного файла
 - GET /api/v1/projects/{projectId}/outputs/{outputId}/content - скачать выходной файл (мета)
 
-// TODO: всё остальное (выходные, логи и т.п.)
 
-
-
+/ws - websocket

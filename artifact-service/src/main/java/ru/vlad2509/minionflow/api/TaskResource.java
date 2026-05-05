@@ -6,30 +6,24 @@ import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.StreamingOutput;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
-import ru.vlad2509.minionflow.api.dto.request.ArtifactRequest;
 import ru.vlad2509.minionflow.api.dto.request.PaginationParams;
 import ru.vlad2509.minionflow.api.dto.request.TaskCreateRequest;
 import ru.vlad2509.minionflow.api.dto.response.OutputList;
 import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
-import ru.vlad2509.minionflow.application.JarService;
 import ru.vlad2509.minionflow.application.TaskService;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
-import ru.vlad2509.minionflow.application.context.UserContext;
-import ru.vlad2509.minionflow.application.dto.ArtifactDto;
-import ru.vlad2509.minionflow.application.dto.InputArtifactDto;
 import ru.vlad2509.minionflow.application.dto.TaskRunDto;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessMicrotaskRun;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskState;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmAgent;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmMicrotaskRun;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmTaskState;
 import ru.vlad2509.minionflow.application.dto.light.TaskRunLight;
-import ru.vlad2509.minionflow.application.exception.ApiError;
-import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.TokenService;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Path("/artifact-service/api/projects/{projectId}/tasks")
@@ -83,6 +77,48 @@ public class TaskResource {
                                  @RestPath("taskId") UUID taskId) {
         return new OutputList(taskService.getOutputs(tokenService.parseJwt(jwt), projectId, taskId));
     }
+
+    @GET
+    @Path("/{taskId}/stats/stateless")
+    @Authenticated
+    public StatelessTaskState getStatelessState(@PathParam("taskId") UUID taskId){
+        //TODO
+        return null;
+    }
+
+    @GET
+    @Path("/{taskId}/microtasks/stateless/{microtaskId}")
+    @Authenticated
+    public StatelessMicrotaskRun getStatelessMicrotask(@PathParam("taskId") UUID taskId, @PathParam("microtaskId") UUID microtaskId){
+        //TODO
+        return null;
+    }
+
+    @GET
+    @Path("/{taskId}/stats/swarm")
+    @Authenticated
+    public SwarmTaskState getSwarmState(@PathParam("taskId") UUID taskId){
+        //TODO
+        return null;
+    }
+
+    @GET
+    @Path("/{taskId}/microtasks/swarm/{microtaskId}")
+    @Authenticated
+    public SwarmMicrotaskRun getSwarmMicrotask(@PathParam("taskId") UUID taskId, @PathParam("microtaskId") UUID microtaskId){
+        //TODO
+        return null;
+    }
+
+    @GET
+    @Path("/{taskId}/agents/{agentId}")
+    @Authenticated
+    public SwarmAgent getSwarmAgent(@PathParam("taskId") UUID taskId, @PathParam("agentId") UUID agentId){
+        //TODO
+        return null;
+    }
+
+
 
 
 }
