@@ -84,9 +84,6 @@ public class TaskRunEntity extends PanacheEntityBase {
     @Column(name = "done_at", nullable = true, columnDefinition = "timestamptz")
     public Instant doneAt;
 
-    @Column(name = "output_ready", nullable = false)
-    public boolean outputReady;
-
     public TaskRunEntity() {
     }
 
@@ -94,7 +91,7 @@ public class TaskRunEntity extends PanacheEntityBase {
     public TaskRunEntity(UUID id, UUID projectId, UUID userId, TaskStatus status, StorageIdentifierEntity jarArtifact,
                          StorageIdentifierEntity inputArtifact, JarArtifactEntity jarJpa, InputArtifactEntity inputJpa,
                          ExecutionConfigEntity executionConfig, Set<ArtifactEntity> outputs, ExecutionType taskType,
-                         Instant createdAt, Instant startedAt, Instant finishedAt, Instant doneAt, boolean outputReady) {
+                         Instant createdAt, Instant startedAt, Instant finishedAt, Instant doneAt) {
         this.id = id;
         this.projectId = projectId;
         this.userId = userId;
@@ -110,14 +107,13 @@ public class TaskRunEntity extends PanacheEntityBase {
         this.startedAt = startedAt;
         this.finishedAt = finishedAt;
         this.doneAt = doneAt;
-        this.outputReady = outputReady;
     }
 
     public TaskRun toDomain(){
         return new TaskRun(id, projectId, userId, status, jarArtifact.toDomain(), inputArtifact.toDomain(),
                 jarJpa.toDomain(), inputJpa.toDomain(), executionConfig.toDomain(),
                 taskType, outputs.stream().map(ArtifactEntity::toDomain).collect(Collectors.toSet()), createdAt,
-                startedAt, finishedAt, doneAt, outputReady);
+                startedAt, finishedAt, doneAt);
     }
 
     public static TaskRunEntity fromDomain(TaskRun taskRun, StorageIdentifierEntity jarArtifact,
@@ -126,6 +122,6 @@ public class TaskRunEntity extends PanacheEntityBase {
                                            Set<ArtifactEntity> outputs) {
         return new TaskRunEntity(taskRun.getId(), taskRun.getProjectId(), taskRun.getUserId(), taskRun.getStatus(),
                 jarArtifact, inputArtifact, jarJpa, inputJpa, executionConfig, outputs, taskRun.getTaskType(),
-                taskRun.getCreatedAt(), taskRun.getStartedAt(), taskRun.getFinishedAt(), taskRun.getDoneAt(), taskRun.isOutputReady());
+                taskRun.getCreatedAt(), taskRun.getStartedAt(), taskRun.getFinishedAt(), taskRun.getDoneAt());
     }
 }

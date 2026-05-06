@@ -4,12 +4,9 @@ import ru.vlad2509.minionflow.application.dto.engine.MicrotaskLogsBatch;
 import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskState;
 import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmTaskState;
 
-import java.util.UUID;
+public interface TaskPatchNotifier {
 
-public interface TaskPatchHandler {
-
-    void onStatelessStatePatch(StatelessTaskState state);
-    void onSwarmStatePatch(SwarmTaskState state);
-    void onLogBatch(MicrotaskLogsBatch batch);
-
+    void sendStatelessStatePatch(StatelessTaskState state);
+    void sendSwarmStatePatch(SwarmTaskState state);
+    void sendLogBatch(MicrotaskLogsBatch batch);
 }

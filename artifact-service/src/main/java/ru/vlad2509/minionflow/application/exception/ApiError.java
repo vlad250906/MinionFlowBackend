@@ -2,6 +2,8 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    TASK_CANCEL_FAIL(409, "taskCancelFailed", "Task could not be cancelled at this state"),
+    MICROTASK_NOT_FOUND(404, "microtaskNotFound", "Microtask not found"),
     OUTPUT_NOT_READY(409, "outputNotAvailable", "Output is not available for this task"),
     INVALID_EXECUTION_CONFIG(400, "invalidExecutionConfig", "Invalid execution config"),
     TASK_NOT_FOUND(404, "taskNotFound", "Task run not found"),

@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.dto.light.TaskRunLight;
@@ -73,14 +74,32 @@ public class TaskRunRepository implements PanacheRepository<TaskRunEntity> {
         em.persist(TaskRunEntity.fromDomain(taskRun, jarArtifact, inputArtifact, jarJpa, inputJpa, executionConfig, new HashSet<>()));
     }
 
-    @Transactional
-    public void updateOutputs(TaskRun taskRun) {
-        Optional<TaskRunEntity> taskRunOptional = find("id", taskRun.getId()).singleResultOptional();
-        if (taskRunOptional.isEmpty())
-            return;
-        for (ArtifactEntity artifactEntity : artifactRepository.find("id in ?1", taskRun.getOutputs().stream().map(Artifact::getId)).list()) {
-            taskRunOptional.get().outputs.add(artifactEntity);
-        }
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public boolean updateOutputsIfEmpty(TaskRun taskRun) {
+        TaskRunEntity taskRunEntity = find("id", taskRun.getId())
+                .withLock(LockModeType.PESSIMISTIC_WRITE)
+                .firstResult();
+
+        if (taskRunEntity == null || (taskRunEntity.outputs != null && !taskRunEntity.outputs.isEmpty()))
+            return false;
+
+        if (taskRunEntity.outputs == null)
+            taskRunEntity.outputs = new HashSet<>();
+
+        taskRunEntity.outputs.addAll(artifactRepository.find("id in ?1", taskRun.getOutputs().stream().map(Artifact::getId)).list());
+        return true;
+    }
+
+    @Transactional(Transactional.TxType.REQUIRED)
+    public Optional<TaskRun> lockById(UUID id){
+        return find("id", id)
+                .withLock(LockModeType.PESSIMISTIC_WRITE)
+                .singleResultOptional().map(TaskRunEntity::toDomain);
+    }
+
+    @Transactional(Transactional.TxType.REQUIRED)
+    public void updateStatus(TaskRun taskRun){
+        this.update("status = ?1 where id = ?2", taskRun.getStatus(), taskRun.getId());
     }
 
 }

@@ -4,14 +4,16 @@ import com.google.common.net.MediaType;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import ru.vlad2509.minionflow.application.dto.engine.BaseTaskSummary;
 import ru.vlad2509.minionflow.application.dto.engine.EngineTaskStatus;
 import ru.vlad2509.minionflow.application.dto.engine.MicrotaskLog;
+import ru.vlad2509.minionflow.application.dto.engine.MicrotaskRunStatus;
 import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessMicrotaskRun;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessMicrotaskState;
 import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskState;
-import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmAgent;
-import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmMicrotaskRun;
-import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmTaskState;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.*;
 import ru.vlad2509.minionflow.application.ports.out.S3Service;
 import ru.vlad2509.minionflow.application.ports.out.TaskEngine;
 import ru.vlad2509.minionflow.application.ports.out.TaskPatchHandler;
@@ -22,11 +24,14 @@ import ru.vlad2509.minionflow.domain.model.enums.TaskStatus;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Named("MockTaskEngine")
 @ApplicationScoped
 public class TaskEngineMock implements TaskEngine {
 
@@ -40,7 +45,10 @@ public class TaskEngineMock implements TaskEngine {
     private final ExecutorService customExecutor;
     private final Random random = new Random();
     private Set<UUID> cancelledTasks = new HashSet<>();
-    private Object lock = new Object();
+    private Map<UUID, List<UUID>> microtasks = new HashMap<>();
+    private Map<UUID, UUID> taskByMicrotask = new HashMap<>();
+    private Object lock;
+
 
     public TaskEngineMock(@ConfigProperty(name = "artifact-service.mock-pool-size", defaultValue = "3")
                           int poolSize) {
@@ -51,6 +59,17 @@ public class TaskEngineMock implements TaskEngine {
     public void startTask(TaskRun taskRun) {
         Objects.requireNonNull(taskRun);
         Objects.requireNonNull(taskPatchHandler);
+
+        synchronized (lock) {
+            System.out.println("microtasks for task " + taskRun.getId());
+            microtasks.put(taskRun.getId(), new ArrayList<>());
+            for (int i = 0; i < random.nextInt(1, 6); i++) {
+                UUID microtaskId = UUID.randomUUID();
+                System.out.println("microtask " + microtaskId);
+                microtasks.get(taskRun.getId()).add(microtaskId);
+                taskByMicrotask.put(microtaskId, taskRun.getId());
+            }
+        }
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -70,34 +89,55 @@ public class TaskEngineMock implements TaskEngine {
         }
     }
 
+    // TODO
+    @Override
+    public Optional<UUID> getTaskByMicrotaskId(UUID microtaskId) {
+        synchronized (lock) {
+            return taskByMicrotask.containsKey(microtaskId) ? Optional.of(taskByMicrotask.get(microtaskId)) : Optional.empty();
+        }
+    }
+
     @Override
     public List<MicrotaskLog> getMicrotaskLogs(UUID microtaskId, int afterSeq, int limit) {
-        return List.of();
+        List<MicrotaskLog> logs = new ArrayList<>();
+        if (random.nextInt(5) < 3)
+            return logs;
+        for (int i = 0; i < random.nextInt(1, 10); i++) {
+            logs.add(new MicrotaskLog("INFO", i, Instant.now(), "random log for " + microtaskId + " wioth number" + random.nextInt(1000)));
+        }
+        return logs;
     }
 
     @Override
     public StatelessTaskState getStatelessState(TaskRun taskRun) {
-        return null;
+        return new StatelessTaskState(taskRun.getId(), 0, "patch", EngineTaskStatus.STARTING, TaskStatus.FAILED,
+                new BaseTaskSummary(10, 2, 3, 1, 2, 2, 1),
+                microtasks.get(taskRun.getId()).stream().map(microtaskId -> new StatelessMicrotaskState(microtaskId, 0, MicrotaskRunStatus.QUEUED)).toList());
     }
 
     @Override
     public StatelessMicrotaskRun getStatelessMicrotask(TaskRun taskRun, UUID microtaskId) {
-        return null;
+        LocalDateTime now = LocalDateTime.now();
+        return new StatelessMicrotaskRun(taskRun.getId(), microtaskId, 0, MicrotaskRunStatus.FAILED, now, now, now, now, 0, "unluck");
     }
 
     @Override
     public SwarmTaskState getSwarmState(TaskRun taskRun) {
-        return null;
+        return new SwarmTaskState(taskRun.getId(), 0, "patch", EngineTaskStatus.STARTING, TaskStatus.FAILED,
+                new SwarmTaskSummary(10, 2, 3, 1, 2, 2, 1, 123, SwarmPhase.STEP),
+                microtasks.get(taskRun.getId()).stream().map(microtaskId -> new SwarmAgentState(microtaskId, 0, MicrotaskRunStatus.QUEUED, 123, SwarmPhase.STEP)).toList());
     }
 
     @Override
     public SwarmMicrotaskRun getSwarmMicrotask(TaskRun taskRun, UUID microtaskId) {
-        return null;
+        LocalDateTime now = LocalDateTime.now();
+        return new SwarmMicrotaskRun(taskRun.getId(), microtaskId, 0, MicrotaskRunStatus.FAILED, now, now, now, now, 0, "unluck", microtaskId, SwarmPhase.STEP, 123);
     }
 
     @Override
     public SwarmAgent getSwarmAgent(TaskRun taskRun, UUID agentId) {
-        return null;
+        LocalDateTime now = LocalDateTime.now();
+        return new SwarmAgent(agentId, taskRun.getId(), 0, "inp", "state", SwarmPhase.STEP, 123);
     }
 
     @Override
@@ -114,10 +154,8 @@ public class TaskEngineMock implements TaskEngine {
             checkAndUpdate(taskId, EngineTaskStatus.FAILED);
             return;
         }
+        uploadRandomOutput(taskId, projectId);
         checkAndUpdate(taskId, EngineTaskStatus.SUCCEEDED);
-        Thread.sleep(2 * 1000);
-
-        checkAndUpdate(taskId, uploadRandomOutput(taskId, projectId) ? EngineTaskStatus.SUCCEEDED : EngineTaskStatus.SUCCEEDED);
     }
 
     private void checkAndUpdate(UUID taskId, EngineTaskStatus newStatus) throws InterruptedException {
@@ -127,11 +165,11 @@ public class TaskEngineMock implements TaskEngine {
                 cancelled = true;
             }
         }
-//        if (cancelled) {
-//            taskPatchHandler.updateTaskStatus(taskId, TaskStatus.CANCELED);
-//            throw new InterruptedException();
-//        }
-        taskPatchHandler.updateTaskStatus(taskId, newStatus);
+        if (cancelled)
+            return;
+        taskPatchHandler.onStatelessStatePatch(new StatelessTaskState(taskId, 0, "patch", EngineTaskStatus.STARTING, TaskStatus.FAILED,
+                new BaseTaskSummary(10, 2, 3, 1, 2, 2, 1),
+                microtasks.get(taskId).stream().map(microtaskId -> new StatelessMicrotaskState(microtaskId, 0, MicrotaskRunStatus.QUEUED)).toList()));
     }
 
     private boolean uploadRandomOutput(UUID taskId, UUID projectId) {

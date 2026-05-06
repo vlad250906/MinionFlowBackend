@@ -9,6 +9,7 @@ import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmTaskState;
 import ru.vlad2509.minionflow.domain.model.TaskRun;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TaskEngine {
@@ -16,6 +17,8 @@ public interface TaskEngine {
     void startTask(TaskRun taskRun);
 
     void cancelTask(TaskRun taskRun);
+
+    Optional<UUID> getTaskByMicrotaskId(UUID microtaskId);
 
     List<MicrotaskLog> getMicrotaskLogs(UUID microtaskId, int afterSeq, int limit);
 

@@ -1,16 +1,22 @@
 package ru.vlad2509.minionflow.application;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.StreamingOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vlad2509.minionflow.application.dto.engine.MicrotaskLogsBatch;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.ArtifactDto;
 import ru.vlad2509.minionflow.application.dto.TaskRunDto;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessMicrotaskRun;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskState;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmAgent;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmMicrotaskRun;
+import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmTaskState;
 import ru.vlad2509.minionflow.application.dto.light.TaskRunLight;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
@@ -21,11 +27,9 @@ import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.domain.model.*;
 import ru.vlad2509.minionflow.domain.model.enums.ArtifactType;
 import ru.vlad2509.minionflow.domain.model.enums.ProjectPermission;
-import ru.vlad2509.minionflow.domain.model.enums.TaskStatus;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -50,11 +54,16 @@ public class TaskService {
     ArtifactService artifactService;
 
     @Inject
+    @Named("MinionFlowTaskEngine")
     TaskEngine taskEngine;
 
-    private static final Logger LOG = LoggerFactory.getLogger(TaskService.class);
     @Inject
     StorageKeyFactory storageKeyFactory;
+
+    @Inject
+    TaskAsyncService taskAsyncService;
+
+    private static final Logger LOG = LoggerFactory.getLogger(TaskService.class);
 
 
     public TaskRunDto createTaskRun(UserContext userContext, UUID projectId, UUID jarId, UUID inputId, UUID configId) {
@@ -69,7 +78,7 @@ public class TaskService {
         TaskRun taskRun = taskRunRepository.findById(taskRunId).orElseThrow(() -> new ApiException(ApiError.TASK_NOT_FOUND));
         if (!projectId.equals(taskRun.getProjectId()))
             throw new ApiException(ApiError.TASK_NOT_FOUND, "exists, but in different project");
-        taskEngine.cancelTask(taskRun);
+        taskAsyncService.cancelTask(taskRun);
     }
 
     public TaskRunDto getTaskRun(UserContext userContext, UUID projectId, UUID taskRunId) {
@@ -83,6 +92,42 @@ public class TaskService {
     public List<TaskRunLight> getTaskRuns(UserContext userContext, PaginationContext paginationContext, UUID projectId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.TASK_READ);
         return taskRunRepository.findAllTasksLight(paginationContext, projectId);
+    }
+
+    public MicrotaskLogsBatch getLogs(UserContext userContext, UUID projectId, UUID microtaskId, int afterSeq, int limit) {
+        tokenService.authorize(userContext, projectId, ProjectPermission.LOG_READ);
+        UUID taskId = taskEngine.getTaskByMicrotaskId(microtaskId)
+                .orElseThrow(() -> new ApiException(ApiError.MICROTASK_NOT_FOUND));
+        TaskRun task = taskRunRepository.findById(taskId)
+                .orElseThrow(() -> new ApiException(ApiError.UNEXPECTED_ERROR, "microtaskId->taskId from engine is invalid"));
+        if (!projectId.equals(task.getProjectId()))
+            throw new ApiException(ApiError.MICROTASK_NOT_FOUND, "exists, but in different project");
+        return new MicrotaskLogsBatch(microtaskId, taskEngine.getMicrotaskLogs(microtaskId, afterSeq, limit));
+    }
+
+    public StatelessTaskState getStatelessState(UserContext userContext, UUID projectId, UUID taskId) {
+        TaskRun task = taskReadAuth(userContext, projectId, taskId);
+        return taskEngine.getStatelessState(task);
+    }
+
+    public StatelessMicrotaskRun getStatelessMicrotask(UserContext userContext, UUID projectId, UUID taskId, UUID microtaskId) {
+        TaskRun task = taskReadAuth(userContext, projectId, taskId);
+        return taskEngine.getStatelessMicrotask(task, microtaskId);
+    }
+
+    public SwarmTaskState getSwarmState(UserContext userContext, UUID projectId, UUID taskId) {
+        TaskRun task = taskReadAuth(userContext, projectId, taskId);
+        return taskEngine.getSwarmState(task);
+    }
+
+    public SwarmMicrotaskRun getSwarmMicrotask(UserContext userContext, UUID projectId, UUID taskId, UUID microtaskId) {
+        TaskRun task = taskReadAuth(userContext, projectId, taskId);
+        return taskEngine.getSwarmMicrotask(task, microtaskId);
+    }
+
+    public SwarmAgent getSwarmAgent(UserContext userContext, UUID projectId, UUID taskId, UUID agentId) {
+        TaskRun task = taskReadAuth(userContext, projectId, taskId);
+        return taskEngine.getSwarmAgent(task, agentId);
     }
 
     @Transactional
@@ -111,49 +156,6 @@ public class TaskService {
         return artifactService.downloadArtifact(userContext, projectId, outputId);
     }
 
-    public void onStatusChange(UUID taskId, TaskStatus newStatus) {
-        if (newStatus == TaskStatus.DONE)
-            discoverOutput(taskId);
-
-        updateStatus(taskId, newStatus);
-    }
-
-    void discoverOutput(UUID taskId) {
-        Optional<TaskRun> taskRunOptional = taskRunRepository.findById(taskId);
-        if (taskRunOptional.isPresent()) {
-            TaskRun taskRun = taskRunOptional.get();
-            List<Artifact> artifactIds = artifactService.discoverArtifact(
-                    storageKeyFactory.generateOutputsPrefix(taskRun.getProjectId(), taskId),
-                    taskRun.getUserId(),
-                    taskRun.getProjectId()
-            );
-            setTaskOutput(taskRun, artifactIds);
-        }
-    }
-
-    @Transactional
-    void setTaskOutput(TaskRun taskRun, List<Artifact> artifactIds) {
-        taskRun.addOutputs(artifactIds);
-        taskRunRepository.updateOutputs(taskRun);
-    }
-
-    @Transactional
-    void updateStatus(UUID taskId, TaskStatus newStatus) {
-        TaskRun task = taskRunRepository.findById(taskId).orElse(null);
-        if (task == null) {
-            LOG.warn("Task with id {} does not exists, can't update its status!", taskId);
-            return;
-        }
-
-        // TODO: проверка доменных переходов статусов
-        // TODO: Сделать логику с FOR UPDATE у тасков
-        // TODO: флажок "выходные данные готовы"
-        task.setStatus(newStatus);
-
-    }
-
-    record ArtifactContext(UUID userId, UUID projectId) {
-    }
 
     @Transactional
     TaskRun createTaskRunTransactional(UserContext userContext, UUID projectId, UUID jarId, UUID inputId, UUID configId) {
@@ -166,9 +168,14 @@ public class TaskService {
         return taskRun;
     }
 
-    @PostConstruct
-    public void postConstruct() {
-        taskEngine.registerStatusHandler(this::onStatusChange);
+    @Transactional
+    TaskRun taskReadAuth(UserContext userContext, UUID projectId, UUID taskId) {
+        tokenService.authorize(userContext, projectId, ProjectPermission.TASK_READ);
+        TaskRun task = taskRunRepository.findById(taskId).orElseThrow(() -> new ApiException(ApiError.TASK_NOT_FOUND));
+        if (!projectId.equals(task.getProjectId()))
+            throw new ApiException(ApiError.TASK_NOT_FOUND, "exists, but in different project");
+        return task;
     }
+
 
 }
