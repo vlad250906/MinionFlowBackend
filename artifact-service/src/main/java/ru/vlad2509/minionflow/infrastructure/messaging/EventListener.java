@@ -39,6 +39,10 @@ public abstract class EventListener<T> {
         this.inboxCheck = inboxCheck;
     }
 
+    protected Channel getChannel() {
+        return channel;
+    }
+
     public void setEventHandler(Consumer<T> eventHandler){
         this.eventHandler = eventHandler;
     }

@@ -50,11 +50,12 @@ public class OutboxService {
         senders.put(queue, sender);
     }
 
-    @Scheduled(every = "5s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    @Scheduled(every = "1s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     public void processOutbox() {
         List<OutboxMessage> outboxMessages = outboxRepository.leaseBatch(batchSize, instanceId, leaseTimeout);
         for (OutboxMessage outboxMessage : outboxMessages) {
-            EventPublisher<?> publisher = senders.getOrDefault(outboxMessage.queue, null);
+            String routingKey = outboxMessage.queue.split("\\.")[0];
+            EventPublisher<?> publisher = senders.getOrDefault(routingKey, null);
             if (publisher == null) {
                 LOG.error("No EventPublisher found for queue {}", outboxMessage.queue);
                 outboxRepository.markFailed(outboxMessage.messageId, "[BUG] No EventPublisher found");

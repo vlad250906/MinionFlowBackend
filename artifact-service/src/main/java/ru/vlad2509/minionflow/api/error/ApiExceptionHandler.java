@@ -21,6 +21,7 @@ import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
+import ru.vlad2509.minionflow.MyApplication;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 
 import java.util.List;
@@ -108,7 +109,7 @@ public class ApiExceptionHandler {
                 500,
                 "unexpectedError",
                 "Unexpected error",
-                "An unexpected error occurred.",
+                MyApplication.IS_DEV ? ex.getMessage() : "An unexpected error occurred.",
                 uriInfo,
                 req,
                 null

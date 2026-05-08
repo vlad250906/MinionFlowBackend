@@ -87,7 +87,7 @@ public class TaskRunEntity extends PanacheEntityBase {
     public TaskRunEntity() {
     }
 
-    // 16...
+    // 15...
     public TaskRunEntity(UUID id, UUID projectId, UUID userId, TaskStatus status, StorageIdentifierEntity jarArtifact,
                          StorageIdentifierEntity inputArtifact, JarArtifactEntity jarJpa, InputArtifactEntity inputJpa,
                          ExecutionConfigEntity executionConfig, Set<ArtifactEntity> outputs, ExecutionType taskType,

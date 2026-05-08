@@ -1,12 +1,10 @@
-package ru.vlad2509.minionflow.infrastructure.messaging.events;
+package ru.vlad2509.minionflow.infrastructure.messaging.events.mock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import io.quarkus.runtime.StartupEvent;
-import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -15,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import ru.vlad2509.minionflow.infrastructure.messaging.EventPublisher;
 import ru.vlad2509.minionflow.infrastructure.messaging.rabbit.ConnectionManager;
 
-import java.io.IOException;
 import java.util.Random;
 
 @ApplicationScoped

@@ -1,4 +1,4 @@
-package ru.vlad2509.minionflow.api;
+package ru.vlad2509.minionflow.api.rest;
 
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;

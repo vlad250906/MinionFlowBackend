@@ -1,27 +1,20 @@
-package ru.vlad2509.minionflow.api;
+package ru.vlad2509.minionflow.api.rest;
 
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestPath;
-import ru.vlad2509.minionflow.api.dto.request.PaginationParams;
-import ru.vlad2509.minionflow.api.dto.response.OutputList;
-import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
 import ru.vlad2509.minionflow.application.TaskService;
-import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.ArtifactDto;
-import ru.vlad2509.minionflow.application.dto.light.TaskRunLight;
 import ru.vlad2509.minionflow.application.util.TokenService;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 
 @Path("/artifact-service/api/projects/{projectId}/outputs")

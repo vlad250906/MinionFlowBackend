@@ -23,9 +23,9 @@ public class RabbitService {
     RabbitPool rabbitPool;
 
     private static final Logger LOG = LoggerFactory.getLogger(RabbitService.class);
-    private static final Map<Channel, ConfirmTracker> trackers = new ConcurrentHashMap<Channel, ConfirmTracker>();
+    private static final Map<Channel, ConfirmTracker> trackers = new ConcurrentHashMap<>();
 
-    public boolean publish(Channel channel, String queue, String messageId, String payload) {
+    public boolean publish(Channel channel, String routingKey, String messageId, String payload) {
         try {
             AMQP.BasicProperties properties = new AMQP.BasicProperties().builder()
                     .contentType("application/json")
@@ -37,10 +37,10 @@ public class RabbitService {
             if (tracker != null)
                 tracker.addMessage(channel.getNextPublishSeqNo(), messageId);
 
-            channel.basicPublish("global", queue, properties, payload.getBytes(StandardCharsets.UTF_8));
+            channel.basicPublish("global", routingKey, properties, payload.getBytes(StandardCharsets.UTF_8));
             return true;
         } catch (Exception e) {
-            LOG.warn("Error publishing to queue: {}", queue, e);
+            LOG.warn("Error publishing to queue: {}", routingKey, e);
             return false;
         }
     }
@@ -82,6 +82,14 @@ public class RabbitService {
         }
     }
 
+    public void setQos(Channel channel, int qos){
+        try{
+            channel.basicQos(qos);
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
     public void initQueue(Channel channel, String queueName, boolean durable){
         try {
             channel.exchangeDeclare("global", BuiltinExchangeType.TOPIC, true);
@@ -92,7 +100,27 @@ public class RabbitService {
         }
     }
 
+    public void addBinding(Channel channel, String queueName, String bindingKey){
+        try{
+            channel.queueBind(queueName, "global", bindingKey);
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void removeBinding(Channel channel, String queueName, String bindingKey){
+        try{
+            channel.queueUnbind(queueName, "global", bindingKey);
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
     public void enableConfirmListener(Channel channel, Consumer<String> onAck, BiConsumer<String, String> onNack) {
+        enableConfirmListener(channel, onAck, onNack, false);
+    }
+
+    public void enableConfirmListener(Channel channel, Consumer<String> onAck, BiConsumer<String, String> onNack, boolean ignoreReturns) {
         try {
             channel.confirmSelect();
         } catch (IOException e) {
@@ -107,8 +135,9 @@ public class RabbitService {
                 (seq, multiple) -> tracker.processSeq(seq, multiple, "[NACK] Nack for publish seqNo: " + seq)
         );
         channel.addReturnListener((ret) -> {
-            LOG.error("RabbitMQ returned message (probably unroutable), messageId: {}, code: {}, reason: {}",
-                    ret.getProperties().getMessageId(), ret.getReplyCode(), ret.getReplyText());
+            if(!ignoreReturns)
+                LOG.error("RabbitMQ returned message (probably unroutable), messageId: {}, code: {}, reason: {}",
+                        ret.getProperties().getMessageId(), ret.getReplyCode(), ret.getReplyText());
         });
         channel.addShutdownListener((ex) -> tracker.failAll("[SHUT]" + ex.getMessage()));
     }

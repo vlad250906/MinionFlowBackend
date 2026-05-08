@@ -17,28 +17,34 @@ public abstract class EventPublisher<T> {
     @Inject
     protected RabbitService rabbitService;
 
-    private final String queueName;
+    private final String routingKey;
     private Channel channel;
 
-    public EventPublisher(String queueName) {
-        this.queueName = queueName;
+    public EventPublisher(String routingKey) {
+        this.routingKey = routingKey;
     }
 
     void init(@Observes StartupEvent event){
-        outboxService.registerSender(queueName, this);
+        outboxService.registerSender(routingKey, this);
     }
 
     public void publish(T message) {
         UUID messageId = UUID.randomUUID();
         String payload = serializeMessage(message);
-        outboxService.add(messageId.toString(), queueName, payload);
+        outboxService.add(messageId.toString(), this.routingKey, payload);
+    }
+
+    public void publish(String routingKey, T message) {
+        UUID messageId = UUID.randomUUID();
+        String payload = serializeMessage(message);
+        outboxService.add(messageId.toString(), routingKey, payload);
     }
 
     public boolean sendToBroker(String messageId, String content) {
         if (channel == null)
             channel = setupChannel();
 
-        return rabbitService.publish(channel, queueName, messageId, content);
+        return rabbitService.publish(channel, routingKey, messageId, content);
     }
 
     protected abstract Channel setupChannel();
