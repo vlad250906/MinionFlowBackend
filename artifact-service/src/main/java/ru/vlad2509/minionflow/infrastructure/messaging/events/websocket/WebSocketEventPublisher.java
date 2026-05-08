@@ -12,7 +12,7 @@ import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskStat
 import ru.vlad2509.minionflow.application.dto.engine.swarm.SwarmTaskState;
 import ru.vlad2509.minionflow.application.dto.messaging.WebSocketEvent;
 import ru.vlad2509.minionflow.application.ports.out.TaskPatchNotifier;
-import ru.vlad2509.minionflow.application.util.WebsocketChannelFactory;
+import ru.vlad2509.minionflow.application.util.WebSocketChannelFactory;
 import ru.vlad2509.minionflow.infrastructure.messaging.EventPublisher;
 import ru.vlad2509.minionflow.infrastructure.messaging.rabbit.ConnectionManager;
 
@@ -27,7 +27,7 @@ public class WebSocketEventPublisher extends EventPublisher<WebSocketEvent> impl
     ConnectionManager connectionManager;
 
     @Inject
-    WebsocketChannelFactory websocketChannelFactory;
+    WebSocketChannelFactory websocketChannelFactory;
 
     public WebSocketEventPublisher() {
         super("websocket");

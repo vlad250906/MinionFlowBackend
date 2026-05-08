@@ -9,6 +9,7 @@ import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.domain.model.enums.MemberRole;
 import ru.vlad2509.minionflow.domain.model.enums.ProjectPermission;
+import ru.vlad2509.minionflow.infrastructure.persistence.model.RemoteProjectMember;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.RemoteProjectMemberRepository;
 
 import java.util.Arrays;
@@ -45,6 +46,17 @@ public class TokenService {
                 .orElseThrow(() -> new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project or it does not exist")).role;
         if (!Arrays.stream(permissions).allMatch(permission -> role.getPermissions().contains(permission)))
             throw new ApiException(ApiError.INSUFFICIENT_PERMISSION, "not enough permissions");
+    }
+
+    @Transactional
+    public ApiException authorizeNoThrow(UserContext userContext, UUID projectId, ProjectPermission... permissions) {
+        RemoteProjectMember member = remoteProjectMemberRepository.findByProjectUserId(projectId, userContext.userId())
+                .orElse(null);
+        if(member == null)
+            return new ApiException(ApiError.PROJECT_NOT_FOUND, "user is not a member of the project or it does not exist");
+        if (!Arrays.stream(permissions).allMatch(permission -> member.role.getPermissions().contains(permission)))
+            return new ApiException(ApiError.INSUFFICIENT_PERMISSION, "not enough permissions");
+        return null;
     }
 
 }

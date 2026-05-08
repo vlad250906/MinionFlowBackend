@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vlad2509.minionflow.MyApplication;
 import ru.vlad2509.minionflow.application.dto.engine.EngineTaskStatus;
 import ru.vlad2509.minionflow.application.dto.engine.MicrotaskLogsBatch;
 import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskState;
@@ -47,7 +48,7 @@ public class TaskAsyncService implements TaskPatchHandler {
     @Inject
     StorageKeyFactory storageKeyFactory;
 
-    @Named("MockTaskEngine")
+    @Named(MyApplication.ENGINE_USED)
     @Inject
     TaskEngine taskEngine;
 

@@ -2,6 +2,8 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    BAD_OP(400, "badOp", "Undefined operation type"),
+    UNDEFINED_CHANNEL(404, "undefinedChannel", "Undefined channel name"),
     TASK_CANCEL_FAIL(409, "taskCancelFailed", "Task could not be cancelled at this state"),
     MICROTASK_NOT_FOUND(404, "microtaskNotFound", "Microtask not found"),
     OUTPUT_NOT_READY(409, "outputNotAvailable", "Output is not available for this task"),

@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.StreamingOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vlad2509.minionflow.MyApplication;
 import ru.vlad2509.minionflow.application.dto.engine.MicrotaskLogsBatch;
 import ru.vlad2509.minionflow.application.context.PaginationContext;
 import ru.vlad2509.minionflow.application.context.UserContext;
@@ -54,7 +55,7 @@ public class TaskService {
     ArtifactService artifactService;
 
     @Inject
-    @Named("MinionFlowTaskEngine")
+    @Named(MyApplication.ENGINE_USED)
     TaskEngine taskEngine;
 
     @Inject
