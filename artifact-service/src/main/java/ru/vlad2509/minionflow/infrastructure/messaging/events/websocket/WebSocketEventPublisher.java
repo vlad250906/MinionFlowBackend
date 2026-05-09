@@ -22,13 +22,14 @@ import java.util.concurrent.atomic.AtomicLong;
 @ApplicationScoped
 public class WebSocketEventPublisher extends EventPublisher<WebSocketEvent> implements TaskPatchNotifier {
 
-    private final AtomicLong sequence = new AtomicLong(0);
-
     @Inject
     ConnectionManager connectionManager;
 
     @Inject
     WebSocketChannelFactory websocketChannelFactory;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     public WebSocketEventPublisher() {
         super("websocket");
@@ -50,10 +51,9 @@ public class WebSocketEventPublisher extends EventPublisher<WebSocketEvent> impl
 
     @Override
     public void sendLogBatch(MicrotaskLogsBatch batch) {
-        long cur = sequence.incrementAndGet();
-        WebSocketChannelInfo info = websocketChannelFactory.taskStatePatches(batch.microtaskId());
+        WebSocketChannelInfo info = websocketChannelFactory.microtaskLogs(batch.microtaskId());
         super.publish(info.bindingName(), new WebSocketEvent("microtaskLogs",
-                info.webSocketName(), cur, encode(batch)));
+                info.webSocketName(), -1, encode(batch)));
     }
 
     @Override
@@ -74,6 +74,6 @@ public class WebSocketEventPublisher extends EventPublisher<WebSocketEvent> impl
     }
 
     private JsonNode encode(Object obj) {
-        return (new ObjectMapper()).valueToTree(obj);
+        return objectMapper.valueToTree(obj);
     }
 }

@@ -28,14 +28,14 @@ public class JarArtifactRepository implements PanacheRepository<JarArtifactEntit
 
     @Transactional
     public void createJarArtifact(JarArtifact jarArtifact) {
-        ArtifactEntity artifactEntity = em.find(ArtifactEntity.class, jarArtifact.getId());
+        ArtifactEntity artifactEntity = artifactRepository.getEntityManager().find(ArtifactEntity.class, jarArtifact.getId());
         JarArtifactEntity jarArtifactEntity = JarArtifactEntity.fromDomain(jarArtifact, artifactEntity);
         this.persist(jarArtifactEntity);
     }
 
     @Transactional
     public void update(JarArtifact jarArtifact) {
-        this.update("alias = ?1 where id = ?3", jarArtifact.getAlias(), jarArtifact.getInternalId());
+        this.update("alias = ?1 where id = ?2", jarArtifact.getAlias(), jarArtifact.getInternalId());
     }
 
     @Transactional

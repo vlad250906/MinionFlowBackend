@@ -37,10 +37,11 @@ public abstract class EventPublisher<T> {
     public void publish(String routingKey, T message) {
         UUID messageId = UUID.randomUUID();
         String payload = serializeMessage(message);
+        //System.out.println("planning to send: "+routingKey);
         outboxService.add(messageId.toString(), routingKey, payload);
     }
 
-    public boolean sendToBroker(String messageId, String content) {
+    public boolean sendToBroker(String messageId, String routingKey, String content) {
         if (channel == null)
             channel = setupChannel();
 

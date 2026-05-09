@@ -22,7 +22,7 @@ public class OutboxService {
     @Inject
     OutboxRepository outboxRepository;
 
-    @ConfigProperty(name = "service-common.message_batch", defaultValue = "10")
+    @ConfigProperty(name = "service-common.message_batch", defaultValue = "100")
     int batchSize;
 
     @ConfigProperty(name = "service-common.instance-id", defaultValue = "1")
@@ -62,7 +62,7 @@ public class OutboxService {
                 continue;
             }
 
-            if (!publisher.sendToBroker(outboxMessage.messageId, outboxMessage.content))
+            if (!publisher.sendToBroker(outboxMessage.messageId, outboxMessage.queue, outboxMessage.content))
                 nack(outboxMessage.messageId, "[FAIL] channel publish failed with exception");
         }
     }

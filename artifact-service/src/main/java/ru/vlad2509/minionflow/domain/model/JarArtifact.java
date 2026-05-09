@@ -26,8 +26,8 @@ public class JarArtifact extends Artifact {
     }
 
     public JarArtifact(Artifact artifact, String alias) {
-        super(artifact.getProjectId(), artifact.getUserId(), artifact.getSize(), artifact.getOriginalName(),
-                artifact.getContentType(), artifact.getType(), artifact.getStorageIdentifier());
+        super(artifact.getId(), artifact.getProjectId(), artifact.getUserId(), artifact.getSize(), artifact.getOriginalName(),
+                artifact.getContentType(), artifact.getCreatedAt(), artifact.getType(), artifact.getStorageIdentifier());
         this.alias = alias;
         this.internalId = null;
     }

@@ -103,32 +103,50 @@ public class TaskService {
                 .orElseThrow(() -> new ApiException(ApiError.UNEXPECTED_ERROR, "microtaskId->taskId from engine is invalid"));
         if (!projectId.equals(task.getProjectId()))
             throw new ApiException(ApiError.MICROTASK_NOT_FOUND, "exists, but in different project");
+        var logs = taskEngine.getMicrotaskLogs(microtaskId, afterSeq, limit);
+        if(logs == null)
+            throw new ApiException(ApiError.TASK_NOT_FOUND);
         return new MicrotaskLogsBatch(microtaskId, taskEngine.getMicrotaskLogs(microtaskId, afterSeq, limit));
     }
 
     public StatelessTaskState getStatelessState(UserContext userContext, UUID projectId, UUID taskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
-        return taskEngine.getStatelessState(task);
+        var res = taskEngine.getStatelessState(task);
+        if(res == null)
+            throw new ApiException(ApiError.TASK_NOT_FOUND);
+        return res;
     }
 
     public StatelessMicrotaskRun getStatelessMicrotask(UserContext userContext, UUID projectId, UUID taskId, UUID microtaskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
-        return taskEngine.getStatelessMicrotask(task, microtaskId);
+        var res = taskEngine.getStatelessMicrotask(task, microtaskId);
+        if(res == null)
+            throw new ApiException(ApiError.MICROTASK_NOT_FOUND);
+        return res;
     }
 
     public SwarmTaskState getSwarmState(UserContext userContext, UUID projectId, UUID taskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
-        return taskEngine.getSwarmState(task);
+        var res = taskEngine.getSwarmState(task);
+        if(res == null)
+            throw new ApiException(ApiError.TASK_NOT_FOUND);
+        return res;
     }
 
     public SwarmMicrotaskRun getSwarmMicrotask(UserContext userContext, UUID projectId, UUID taskId, UUID microtaskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
-        return taskEngine.getSwarmMicrotask(task, microtaskId);
+        var res = taskEngine.getSwarmMicrotask(task, microtaskId);
+        if(res == null)
+            throw new ApiException(ApiError.MICROTASK_NOT_FOUND);
+        return res;
     }
 
     public SwarmAgent getSwarmAgent(UserContext userContext, UUID projectId, UUID taskId, UUID agentId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
-        return taskEngine.getSwarmAgent(task, agentId);
+        var res = taskEngine.getSwarmAgent(task, agentId);
+        if(res == null)
+            throw new ApiException(ApiError.AGENT_NOT_FOUND);
+        return res;
     }
 
     @Transactional

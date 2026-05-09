@@ -105,11 +105,16 @@ public class ApiExceptionHandler {
     public RestResponse<ApiErrorResponse> mapAny(Throwable ex, UriInfo uriInfo, ContainerRequestContext req) {
         LOG.error("Unhandled error", ex);
 
+        Throwable th = ex;
+        while (th != null && th.getCause() != null) {
+            th = th.getCause();
+        }
+
         return build(
                 500,
                 "unexpectedError",
                 "Unexpected error",
-                MyApplication.IS_DEV ? ex.getMessage() : "An unexpected error occurred.",
+                MyApplication.IS_DEV && th != null ? "[ONLY IN DEV MODE]  "+th.getMessage() : "An unexpected error occurred.",
                 uriInfo,
                 req,
                 null

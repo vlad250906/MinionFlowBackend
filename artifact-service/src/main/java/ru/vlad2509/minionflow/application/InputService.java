@@ -90,9 +90,9 @@ public class InputService {
             throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
         Artifact artifact = artifactService.updateArtifactContent(userContext,
                 storageKeyFactory.generateInputPrefix(projectId), projectId, artifactId, file);
-        InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId).orElseThrow(
+        InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifact.getId()).orElseThrow(
                 () -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "probably wrong type of artifact, (or u using wrong endpoint)"));
-        return InputArtifactDto.fromDomain(inputArtifact);
+        return new InputArtifactDto(ArtifactDto.fromDomain(artifact), inputArtifact.getAlias(), inputArtifact.getInputType());
     }
 
     public StreamingOutput downloadInput(UserContext userContext, UUID projectId, UUID artifactId) {

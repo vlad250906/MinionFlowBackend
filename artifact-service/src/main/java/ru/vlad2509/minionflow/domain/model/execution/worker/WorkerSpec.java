@@ -1,11 +1,12 @@
 package ru.vlad2509.minionflow.domain.model.execution.worker;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
 public record WorkerSpec(
-        @Valid WorkerBound bound,
+        @Valid @NotNull WorkerBound bound,
         @PositiveOrZero int concurrency,
-        @Valid WorkerResources resources) {
+        @Valid @NotNull WorkerResources resources) {
 
 }

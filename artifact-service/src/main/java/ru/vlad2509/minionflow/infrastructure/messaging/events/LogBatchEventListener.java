@@ -27,7 +27,6 @@ public class LogBatchEventListener extends EventListener<MicrotaskLogsBatch> {
         Channel channel = connectionManager.requestChannel();
         rabbitService.initQueue(channel, QUEUE, true);
         rabbitService.enableConfirmSending(channel);
-        rabbitService.setQos(channel, 1); // т.к. в лог батче нету seq, я не смогу гарантировать порядок доставки логов, поэтому такой батлнек((
         return channel;
     }
 

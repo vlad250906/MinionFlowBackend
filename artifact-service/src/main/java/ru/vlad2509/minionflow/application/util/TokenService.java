@@ -26,11 +26,15 @@ public class TokenService {
 
     public UserContext parseJwt(JsonWebToken jwt) {
         try {
+            if(jwt == null)
+                throw new ApiException(ApiError.UNAUTHORIZED, "JWT is empty");
+            if(jwt.getSubject() == null)
+                throw new ApiException(ApiError.UNAUTHORIZED, "JWT subject is empty");
             UUID userId = UUID.fromString(jwt.getSubject());
             String type = jwt.getClaim("typ");
             String username = jwt.getClaim("una");
             String email = jwt.getClaim("ema");
-            if (!type.equals(ACCESS_TYPE_JWT))
+            if (type == null || !type.equals(ACCESS_TYPE_JWT))
                 throw new ApiException(ApiError.UNAUTHORIZED, "wrong jwt type");
             if (username == null || email == null)
                 throw new ApiException(ApiError.UNAUTHORIZED, "missing username or email");

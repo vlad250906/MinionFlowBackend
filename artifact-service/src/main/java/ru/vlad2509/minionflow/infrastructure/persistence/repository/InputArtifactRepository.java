@@ -34,7 +34,7 @@ public class InputArtifactRepository implements PanacheRepository<InputArtifactE
 
     @Transactional
     public void update(InputArtifact inputArtifact) {
-        this.update("alias = ?1, inputType = ?2 where id = ?3", inputArtifact.getAlias(), inputArtifact.getInputType(), inputArtifact.getInternalId());
+        this.update("alias = ?1, type = ?2 where id = ?3", inputArtifact.getAlias(), inputArtifact.getInputType(), inputArtifact.getInternalId());
     }
 
 

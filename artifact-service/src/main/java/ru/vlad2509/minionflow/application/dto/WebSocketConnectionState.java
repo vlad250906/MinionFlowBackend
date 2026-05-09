@@ -29,7 +29,7 @@ public class WebSocketConnectionState {
 
     public void publishIfNewer(long seq, Object content) {
         synchronized (lock) {
-            if (seq <= lastSeq)
+            if (seq >= 0 && seq <= lastSeq)
                 return;
 
             lastSeq = seq;

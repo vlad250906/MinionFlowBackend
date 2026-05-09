@@ -30,8 +30,8 @@ public class InputArtifact extends Artifact{
     }
 
     public InputArtifact(Artifact artifact, String alias, InputType inputType) {
-        super(artifact.getProjectId(), artifact.getUserId(), artifact.getSize(), artifact.getOriginalName(),
-                artifact.getContentType(), artifact.getType(), artifact.getStorageIdentifier());
+        super(artifact.getId(), artifact.getProjectId(), artifact.getUserId(), artifact.getSize(), artifact.getOriginalName(),
+                artifact.getContentType(), artifact.getCreatedAt(), artifact.getType(), artifact.getStorageIdentifier());
         this.alias = alias;
         this.inputType = inputType;
         this.internalId = null;

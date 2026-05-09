@@ -1,4 +1,8 @@
 package ru.vlad2509.minionflow.domain.model.execution.swarm;
 
-public record GlobalSwarmTopologySpec(SwarmTopologyTypeDto type) implements SwarmTopologySpec {
+import jakarta.validation.constraints.NotNull;
+
+public record GlobalSwarmTopologySpec(
+        @NotNull SwarmTopologyTypeDto type
+) implements SwarmTopologySpec {
 }

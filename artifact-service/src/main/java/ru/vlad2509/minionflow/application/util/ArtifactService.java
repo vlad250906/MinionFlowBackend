@@ -34,6 +34,10 @@ public class ArtifactService {
     @Transactional(Transactional.TxType.NOT_SUPPORTED)
     public Artifact createArtifact(UserContext userContext, String storageKeyPrefix,
                                    UUID projectId, FileUpload file, ArtifactType type) {
+
+        if(file == null || file.size() <= 0 || file.name() == null)
+            throw new ApiException(ApiError.FILE_EMPTY);
+
         String storageKey = storageKeyPrefix + "/" + UUID.randomUUID();
         Artifact artifact = new Artifact(projectId, userContext.userId(), file.size(),
                 file.fileName(), file.contentType(), type, new StorageIdentifier(storageKey));
@@ -56,6 +60,7 @@ public class ArtifactService {
         return artifactRepository.findById(artifactId).orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND));
     }
 
+    @Transactional(Transactional.TxType.NOT_SUPPORTED)
     public Artifact updateArtifactContent(UserContext userContext, String storageKeyPrefix,
                                           UUID projectId, UUID artifactId, FileUpload file) {
         String storageKey = storageKeyPrefix + "/" + UUID.randomUUID();

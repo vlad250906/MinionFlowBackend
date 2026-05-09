@@ -2,9 +2,11 @@ package ru.vlad2509.minionflow.application.exception;
 
 public enum ApiError {
 
+    FILE_EMPTY(400, "fileEmpty", "File is empty"),
     BAD_OP(400, "badOp", "Undefined operation type"),
     UNDEFINED_CHANNEL(404, "undefinedChannel", "Undefined channel name"),
     TASK_CANCEL_FAIL(409, "taskCancelFailed", "Task could not be cancelled at this state"),
+    AGENT_NOT_FOUND(404, "agentNotFound", "Agent not found"),
     MICROTASK_NOT_FOUND(404, "microtaskNotFound", "Microtask not found"),
     OUTPUT_NOT_READY(409, "outputNotAvailable", "Output is not available for this task"),
     INVALID_EXECUTION_CONFIG(400, "invalidExecutionConfig", "Invalid execution config"),

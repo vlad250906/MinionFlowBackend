@@ -89,7 +89,7 @@ public class JarService {
                 storageKeyFactory.generateJarPrefix(projectId), projectId, artifactId, file);
         JarArtifact inputArtifact = jarArtifactRepository.findByArtifactId(artifactId).orElseThrow(
                 () -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "probably wrong type of artifact, (or u using wrong endpoint)"));
-        return JarArtifactDto.fromDomain(inputArtifact);
+        return new JarArtifactDto(ArtifactDto.fromDomain(artifact), inputArtifact.getAlias());
     }
 
     public StreamingOutput downloadJar(UserContext userContext, UUID projectId, UUID artifactId) {

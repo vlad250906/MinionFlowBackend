@@ -112,6 +112,15 @@ public class MinionFlowEngine implements TaskEngine {
         EngineCreateTaskRunRequest request = new EngineCreateTaskRunRequest(taskRun.getProjectId(), taskRun.getId(), jarArtifactName,
                 new EngineTaskConfiguration(executionSpec, inputSpec, outputSpec, securitySpec));
 
+        try {
+            engineApiRestClient.runTask(request);
+        } catch (ApiException ex) {
+            LOG.error("Failed to start task in engine", ex);
+            throw new ApiException(ApiError.ENGINE_REQUEST_FAILED);
+        } catch (Exception ex) {
+            LOG.error("Engine not available", ex);
+            throw new ApiException(ApiError.ENGINE_UNAVAILABLE);
+        }
     }
 
     @Override

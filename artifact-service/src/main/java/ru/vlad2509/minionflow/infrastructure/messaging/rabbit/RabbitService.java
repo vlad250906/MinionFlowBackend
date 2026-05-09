@@ -38,6 +38,7 @@ public class RabbitService {
                 tracker.addMessage(channel.getNextPublishSeqNo(), messageId);
 
             channel.basicPublish("global", routingKey, properties, payload.getBytes(StandardCharsets.UTF_8));
+            //System.out.println("sending to: "+routingKey);
             return true;
         } catch (Exception e) {
             LOG.warn("Error publishing to queue: {}", routingKey, e);

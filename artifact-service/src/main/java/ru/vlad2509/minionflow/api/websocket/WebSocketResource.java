@@ -1,5 +1,6 @@
 package ru.vlad2509.minionflow.api.websocket;
 
+import io.quarkus.security.Authenticated;
 import io.quarkus.websockets.next.OnClose;
 import io.quarkus.websockets.next.OnTextMessage;
 import io.quarkus.websockets.next.WebSocket;
@@ -14,6 +15,7 @@ import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.TokenService;
 
+@Authenticated
 @WebSocket(path = "/ws/v1")
 public class WebSocketResource {
 
@@ -27,25 +29,28 @@ public class WebSocketResource {
     TokenService tokenService;
 
     @OnTextMessage
-    public Uni<WebSocketServerMessage> onMessage(WebSocketClientMessage msg, WebSocketConnection connection) {
+    public WebSocketServerMessage onMessage(WebSocketClientMessage msg, WebSocketConnection connection) {
         return switch (msg.op()) {
             case "subscribe" -> {
-                ApiException apiException = service.authorize(tokenService.parseJwt(jwt), msg.channel());
-                if(apiException != null)
-                    yield Uni.createFrom().item(WebSocketServerMessage.error(msg.channel(), apiException));
+                ApiException apiException = service.authorize(tokenService.parseJwt(jwt),msg.channel());
+                if (apiException != null)
+                    yield WebSocketServerMessage.error(msg.channel(), apiException);
+
                 service.subscribe(connection, msg.channel());
-                yield Uni.createFrom().item(WebSocketServerMessage.subscribed(msg.channel()));
+                yield WebSocketServerMessage.subscribed(msg.channel());
             }
+
             case "unsubscribe" -> {
                 ApiException apiException = service.authorize(tokenService.parseJwt(jwt), msg.channel());
-                if(apiException != null)
-                    yield Uni.createFrom().item(WebSocketServerMessage.error(msg.channel(), apiException));
+
+                if (apiException != null)
+                    yield WebSocketServerMessage.error(msg.channel(), apiException);
+
                 service.unsubscribe(connection, msg.channel());
-                yield Uni.createFrom().item(WebSocketServerMessage.unsubscribed(msg.channel()));
+                yield WebSocketServerMessage.unsubscribed(msg.channel());
             }
-            default -> Uni.createFrom().item(
-                    WebSocketServerMessage.error(msg.channel(), new ApiException(ApiError.BAD_OP))
-            );
+
+            default -> WebSocketServerMessage.error(msg.channel(), new ApiException(ApiError.BAD_OP));
         };
     }
 
@@ -53,5 +58,4 @@ public class WebSocketResource {
     public void onClose(WebSocketConnection connection) {
         service.remove(connection);
     }
-
 }

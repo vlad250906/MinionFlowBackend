@@ -1,10 +1,12 @@
 package ru.vlad2509.minionflow.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.StartupEvent;
 import io.quarkus.websockets.next.WebSocketConnection;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
@@ -129,14 +131,14 @@ public class WebSocketService {
     ApiException authorizeTransactional(UserContext userContext, UUID taskId) {
         TaskRun taskRun = taskRunRepository.findById(taskId).orElse(null);
         if (taskRun == null)
-            return new ApiException(ApiError.MICROTASK_NOT_FOUND);
+            return new ApiException(ApiError.TASK_NOT_FOUND);
         UUID projectId = taskRun.getProjectId();
         return tokenService.authorizeNoThrow(userContext, projectId, ProjectPermission.TASK_READ);
     }
 
-    @PostConstruct
-    public void init() {
+    public void onStartup(@Observes StartupEvent ev) {
         listener.setEventHandler(event -> this.publish(event.channel(), event.seq(), event.content()));
+        listener.startListening();
     }
 
 }
