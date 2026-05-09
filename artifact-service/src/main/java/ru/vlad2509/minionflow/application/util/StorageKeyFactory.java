@@ -24,4 +24,9 @@ public class StorageKeyFactory {
         return projectId.toString() + "/tasks/" + taskId.toString() + "/outputs";
     }
 
+    public String extractLastFromPath(String prefix){
+        String[] chunks = prefix.split("/");
+        return chunks[chunks.length - 1];
+    }
+
 }

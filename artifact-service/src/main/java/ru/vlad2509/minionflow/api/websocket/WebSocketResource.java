@@ -15,7 +15,7 @@ import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.util.TokenService;
 
 @WebSocket(path = "/ws/v1")
-public class ServiceWebSocket {
+public class WebSocketResource {
 
     @Inject
     JsonWebToken jwt;

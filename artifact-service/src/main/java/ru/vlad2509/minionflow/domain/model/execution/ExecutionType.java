@@ -6,7 +6,7 @@ public enum ExecutionType {
 
     @JsonProperty("stateless")
     STATELESS,
-    @JsonProperty("stateful")
-    STATEFUL
+    @JsonProperty("swarm-sync")
+    SWARM_SYNC
 
 }

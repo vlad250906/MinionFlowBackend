@@ -1,6 +1,7 @@
 package ru.vlad2509.minionflow.infrastructure.messaging.events.websocket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.rabbitmq.client.Channel;
@@ -64,15 +65,15 @@ public class WebSocketEventPublisher extends EventPublisher<WebSocketEvent> impl
 
     @Override
     protected String serializeMessage(WebSocketEvent message) {
-        return encode(message);
-    }
-
-    private String encode(Object obj){
         try {
-            ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter(); // TODO: не создавать каждый раз?
-            return ow.writeValueAsString(obj);
+            ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+            return ow.writeValueAsString(message);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private JsonNode encode(Object obj) {
+        return (new ObjectMapper()).valueToTree(obj);
     }
 }

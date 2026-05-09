@@ -34,7 +34,7 @@ public class TaskStateEventListener extends EventListener<BaseTaskState> {
     @Override
     protected BaseTaskState parse(String payload) {
         try {
-            ObjectReader objectReader = new ObjectMapper().readerFor(BaseTaskState.class);
+            ObjectReader objectReader = new ObjectMapper().readerFor(BaseTaskState.class);  // TODO: не создавать каждый раз?
             return objectReader.readValue(payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

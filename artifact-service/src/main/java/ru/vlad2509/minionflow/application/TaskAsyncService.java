@@ -98,19 +98,19 @@ public class TaskAsyncService implements TaskPatchHandler {
 
         if (newStatus.toTaskStatus().equals(TaskStatus.FINISHED)) {
             CompletableFuture.runAsync(() -> discoverOutput(state.taskId()), executor).thenAccept((smth) -> {
-                SwarmTaskState copy = new SwarmTaskState(state.taskId(), state.seq() + 100, state.kind(), null, TaskStatus.DONE, state.summary(), state.microtasks());
+                SwarmTaskState copy = new SwarmTaskState(state.taskId(), state.seq() + 100, state.kind(), null, TaskStatus.DONE, state.summary(), state.agentStates());
                 if (!updateStatus(state.taskId(), TaskStatus.DONE))
                     return;
                 taskPatchNotifier.sendSwarmStatePatch(copy);
             });
         }
 
-        SwarmTaskState copy = new SwarmTaskState(state.taskId(), state.seq(), state.kind(), null, newStatus.toTaskStatus(), state.summary(), state.microtasks());
+        SwarmTaskState copy = new SwarmTaskState(state.taskId(), state.seq(), state.kind(), null, newStatus.toTaskStatus(), state.summary(), state.agentStates());
         taskPatchNotifier.sendSwarmStatePatch(copy);
     }
 
     public void cancelTask(TaskRun taskRun) {
-        if(!updateStatus(taskRun.getId(), TaskStatus.CANCELED))
+        if (!updateStatus(taskRun.getId(), TaskStatus.CANCELED))
             throw new ApiException(ApiError.TASK_CANCEL_FAIL);
         taskEngine.cancelTask(taskRun);
     }

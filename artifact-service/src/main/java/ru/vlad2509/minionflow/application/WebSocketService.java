@@ -1,7 +1,9 @@
 package ru.vlad2509.minionflow.application;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.websockets.next.WebSocketConnection;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -9,6 +11,9 @@ import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.MyApplication;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.WebSocketChannelInfo;
+import ru.vlad2509.minionflow.application.dto.WebSocketConnectionState;
+import ru.vlad2509.minionflow.application.dto.engine.BaseTaskState;
+import ru.vlad2509.minionflow.application.dto.messaging.WebSocketEvent;
 import ru.vlad2509.minionflow.application.exception.ApiError;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 import ru.vlad2509.minionflow.application.ports.out.TaskEngine;
@@ -28,8 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @ApplicationScoped
 public class WebSocketService {
 
-    private final Map<String, Set<WebSocketConnection>> byChannel = new ConcurrentHashMap<>();
-    private final Map<WebSocketConnection, Set<String>> byConnection = new ConcurrentHashMap<>();
+    private final Map<String, Set<WebSocketConnectionState>> byChannel = new ConcurrentHashMap<>();
+    private final Map<WebSocketConnection, Set<WebSocketConnectionState>> byConnection = new ConcurrentHashMap<>();
 
     @Inject
     WebSocketEventListener listener;
@@ -47,31 +52,31 @@ public class WebSocketService {
     @Inject
     TokenService tokenService;
 
-
     public void subscribe(WebSocketConnection connection, String channel) {
         boolean tryBind = false;
+        WebSocketConnectionState state = new WebSocketConnectionState(connection, channel);
         WebSocketChannelInfo info = null;
         if (!byChannel.containsKey(channel))
             tryBind = true;
-        byChannel.computeIfAbsent(channel, ign -> ConcurrentHashMap.newKeySet()).add(connection);
-        byConnection.computeIfAbsent(connection, ign -> ConcurrentHashMap.newKeySet()).add(channel);
+        byChannel.computeIfAbsent(channel, ign -> ConcurrentHashMap.newKeySet()).add(state);
+        byConnection.computeIfAbsent(connection, ign -> ConcurrentHashMap.newKeySet()).add(state);
         if (tryBind && (info = channelFactory.recognise(channel)) != null)
             listener.routingBind(info);
     }
 
     public void unsubscribe(WebSocketConnection connection, String channel) {
-        Set<WebSocketConnection> connections = byChannel.get(channel);
+        Set<WebSocketConnectionState> connections = byChannel.get(channel);
         if (connections != null) {
-            connections.remove(connection);
+            connections.remove(new WebSocketConnectionState(connection, channel));
             if (connections.isEmpty()) {
                 byChannel.remove(channel);
                 listener.routingUnbind(channelFactory.recognise(channel));
             }
         }
 
-        Set<String> channels = byConnection.get(connection);
+        Set<WebSocketConnectionState> channels = byConnection.get(connection);
         if (channels != null) {
-            channels.remove(channel);
+            channels.remove(new WebSocketConnectionState(connection, channel));
             if (channels.isEmpty()) {
                 byConnection.remove(connection);
             }
@@ -79,38 +84,37 @@ public class WebSocketService {
     }
 
     public void remove(WebSocketConnection connection) {
-        Set<String> channels = byConnection.remove(connection);
+        Set<WebSocketConnectionState> channels = byConnection.remove(connection);
         if (channels == null)
             return;
 
-        for (String channel : channels) {
-            Set<WebSocketConnection> connections = byChannel.get(channel);
+        for (WebSocketConnectionState state : channels) {
+            Set<WebSocketConnectionState> connections = byChannel.get(state.getChannel());
             if (connections != null) {
-                connections.remove(connection);
+                connections.remove(state);
                 if (connections.isEmpty()) {
-                    byChannel.remove(channel);
+                    byChannel.remove(state.getChannel());
                 }
             }
         }
     }
 
-    public Uni<Void> publish(String channel, Object message) {
-        Set<WebSocketConnection> connections = byChannel.getOrDefault(channel, Set.of());
-        List<Uni<Void>> sends = connections.stream().map(connection -> connection.sendText(message)).toList();
-
-        if (sends.isEmpty())
-            return Uni.createFrom().voidItem();
-
-        return Uni.combine().all().unis(sends).discardItems();
+    public void publish(String channel, long seq, Object message) {
+        Set<WebSocketConnectionState> connections = byChannel.getOrDefault(channel, Set.of());
+        for (WebSocketConnectionState state : connections) {
+            state.publishIfNewer(seq, message);
+        }
     }
 
     public ApiException authorize(UserContext userContext, String channel) {
         UUID microtaskId = null;
         if ((microtaskId = channelFactory.isMicrotaskLogs(channel)) != null) {
-            UUID taskId = taskEngine.getTaskByMicrotaskId(microtaskId).orElse(null);
-            if (taskId == null)
-                return new ApiException(ApiError.MICROTASK_NOT_FOUND);
-            return authorizeTransactional(userContext, taskId);
+            // FIXME: у swarm тасков невозможно получить microtasks.
+            return null;
+//            UUID taskId = taskEngine.getTaskByMicrotaskId(microtaskId).orElse(null);
+//            if (taskId == null)
+//                return new ApiException(ApiError.MICROTASK_NOT_FOUND);
+//            return authorizeTransactional(userContext, taskId);
         }
 
         UUID taskId = null;
@@ -128,6 +132,11 @@ public class WebSocketService {
             return new ApiException(ApiError.MICROTASK_NOT_FOUND);
         UUID projectId = taskRun.getProjectId();
         return tokenService.authorizeNoThrow(userContext, projectId, ProjectPermission.TASK_READ);
+    }
+
+    @PostConstruct
+    public void init() {
+        listener.setEventHandler(event -> this.publish(event.channel(), event.seq(), event.content()));
     }
 
 }

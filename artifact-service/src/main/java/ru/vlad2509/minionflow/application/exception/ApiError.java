@@ -17,7 +17,9 @@ public enum ApiError {
     INSUFFICIENT_PERMISSION(403, "insufficientPermission", "Insufficient permissions"),
     UNAUTHORIZED(401, "unauthorized", "Unauthorized"),
     I_AM_A_TEAPOT(418, "iAmTeaPot", "I am a teapot (WIP)"),
-    S3_UNAVAILABLE(500, "s3_Unavailable", "S3 service is unavailable. Try again later"),
+    ENGINE_REQUEST_FAILED(520, "engineRequestFailed", "Error failed to process the request"),
+    ENGINE_UNAVAILABLE(503, "engineUnavailable", "Engine is unavailable. Try again later"),
+    S3_UNAVAILABLE(503, "s3_Unavailable", "S3 service is unavailable. Try again later"),
     UNEXPECTED_ERROR(500, "unexpectedError", "Unexpected error");
 
     private final int httpStatusCode;

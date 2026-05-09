@@ -1,12 +1,12 @@
 package ru.vlad2509.minionflow.api.dto.websocket;
 
-import io.vertx.core.json.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import ru.vlad2509.minionflow.application.exception.ApiException;
 
 public record WebSocketServerMessage (
         String type,
         String channel,
-        JsonObject payload,
+        JsonNode payload,
         String code,
         String message
 ){
@@ -23,7 +23,7 @@ public record WebSocketServerMessage (
         return new WebSocketServerMessage("ok", channel, null, null, null);
     }
 
-    public static WebSocketServerMessage event(String channel, JsonObject payload) {
+    public static WebSocketServerMessage event(String channel, JsonNode payload) {
         return new WebSocketServerMessage("event", channel, payload, null, null);
     }
 

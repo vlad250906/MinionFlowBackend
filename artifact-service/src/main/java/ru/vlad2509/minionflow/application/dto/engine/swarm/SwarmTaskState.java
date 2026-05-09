@@ -17,7 +17,7 @@ public record SwarmTaskState (
         EngineTaskStatus status,
         TaskStatus taskStatus,
         SwarmTaskSummary summary,
-        List<SwarmAgentState> microtasks
+        List<SwarmAgentState> agentStates
 
 ) implements BaseTaskState {
 }

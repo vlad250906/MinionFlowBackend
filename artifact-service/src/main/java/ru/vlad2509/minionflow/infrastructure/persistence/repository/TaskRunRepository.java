@@ -26,6 +26,7 @@ public class TaskRunRepository implements PanacheRepository<TaskRunEntity> {
     @Inject
     ArtifactRepository artifactRepository;
 
+    // TODO: щас этот метод подтягивает кучу связей из БД. Особенно: парсит executionConfig (весь!). Надо либо как-то грузить лениво, или чаще юзать light версию (особенно при авторизации)
     @Transactional
     public Optional<TaskRun> findById(UUID id) {
         return find("id", id).singleResultOptional().map(TaskRunEntity::toDomain);
@@ -62,10 +63,10 @@ public class TaskRunRepository implements PanacheRepository<TaskRunEntity> {
         return res;
     }
 
-    //TODO: метод не перетаскивает output!
+    //FIXME: метод не перетаскивает output!
     @Transactional
     public void create(TaskRun taskRun){
-        // FIME: больше не пытаться делать чистую архитекутуру на проектах, в которых дофига репозиториев
+        // FIXME: больше не пытаться делать чистую архитекутуру на проектах, в которых дофига репозиториев
         StorageIdentifierEntity jarArtifact = em.find(StorageIdentifierEntity.class, taskRun.getJarArtifactIdentifier().getInternalId());
         StorageIdentifierEntity inputArtifact = em.find(StorageIdentifierEntity.class, taskRun.getInputArtifactIdentifier().getInternalId());
         JarArtifactEntity jarJpa = em.find(JarArtifactEntity.class, taskRun.getJarArtifact().getInternalId());

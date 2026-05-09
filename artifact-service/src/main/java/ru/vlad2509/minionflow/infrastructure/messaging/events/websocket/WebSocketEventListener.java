@@ -6,24 +6,28 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.rabbitmq.client.Channel;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import ru.vlad2509.minionflow.application.dto.WebSocketChannelInfo;
 import ru.vlad2509.minionflow.application.dto.messaging.WebSocketEvent;
 import ru.vlad2509.minionflow.infrastructure.messaging.EventListener;
 import ru.vlad2509.minionflow.infrastructure.messaging.rabbit.ConnectionManager;
 
-@ApplicationScoped
+@Singleton
 public class WebSocketEventListener extends EventListener<WebSocketEvent> {
 
     private static final String QUEUE_NAME = "websocket-";
     private final int instanceId;
+    private final ConnectionManager connectionManager;
 
     @Inject
-    ConnectionManager connectionManager;
-
-    protected WebSocketEventListener(@ConfigProperty(name = "service-common.instance-id", defaultValue = "1") int instanceId) {
-        super(QUEUE_NAME+instanceId, true);
+    protected WebSocketEventListener(
+            @ConfigProperty(name = "service-common.instance-id", defaultValue = "1") int instanceId,
+            ConnectionManager connectionManager
+    ) {
+        super(QUEUE_NAME + instanceId, true);
         this.instanceId = instanceId;
+        this.connectionManager = connectionManager;
     }
 
     public void routingBind(WebSocketChannelInfo channelInfo) {
