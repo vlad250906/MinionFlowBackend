@@ -104,7 +104,6 @@ public class WebSocketService {
     }
 
     public void publish(String channel, long seq, JsonNode message) {
-        System.out.println("Publishing "+channel);
         Set<WebSocketConnectionState> connections = byChannel.getOrDefault(channel, Set.of());
         for (WebSocketConnectionState state : connections) {
             state.publishIfNewer(seq, WebSocketServerMessage.event(channel, message));

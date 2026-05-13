@@ -60,7 +60,6 @@ public class WebSocketEventListener extends EventListener<WebSocketEvent> {
 
     @Override
     protected WebSocketEvent parse(String payload) {
-        System.out.println("Websocket got: "+payload);
         try {
             ObjectReader objectReader = objectMapper.readerFor(WebSocketEvent.class);
             return objectReader.readValue(payload);

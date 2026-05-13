@@ -78,21 +78,16 @@ public class TaskRunRepository implements PanacheRepository<TaskRunEntity> {
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     public boolean updateOutputsIfEmpty(TaskRun taskRun) {
-        System.out.println("Getting task");
         TaskRunEntity taskRunEntity = find("id", taskRun.getId())
                 .withLock(LockModeType.PESSIMISTIC_WRITE)
                 .firstResult();
-        System.out.println("Got task");
 
         if (taskRunEntity == null || (taskRunEntity.outputs != null && !taskRunEntity.outputs.isEmpty()))
             return false;
-        System.out.println("Got task 2");
 
         if (taskRunEntity.outputs == null)
             taskRunEntity.outputs = new HashSet<>();
-        System.out.println("Got task 3: "+taskRun.getOutputs().stream().map(Artifact::getId).toList());
         taskRunEntity.outputs.addAll(artifactRepository.find("id in ?1", taskRun.getOutputs().stream().map(Artifact::getId).toList()).list());
-        System.out.println("Got task 5");
         return true;
     }
 
