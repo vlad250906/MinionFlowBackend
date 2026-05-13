@@ -3,6 +3,7 @@ package ru.vlad2509.minionflow.domain.vo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
@@ -10,6 +11,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 public record ProjectNameVo(
         @Size(min = 3, max = 200)
         @NotBlank
+        @NotNull
         String value
 ) {
 

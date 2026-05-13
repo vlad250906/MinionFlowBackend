@@ -1,5 +1,6 @@
 package ru.vlad2509.minionflow.application;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.websockets.next.WebSocketConnection;
@@ -11,6 +12,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
 import ru.vlad2509.minionflow.MyApplication;
+import ru.vlad2509.minionflow.api.dto.websocket.WebSocketServerMessage;
 import ru.vlad2509.minionflow.application.context.UserContext;
 import ru.vlad2509.minionflow.application.dto.WebSocketChannelInfo;
 import ru.vlad2509.minionflow.application.dto.WebSocketConnectionState;
@@ -101,10 +103,11 @@ public class WebSocketService {
         }
     }
 
-    public void publish(String channel, long seq, Object message) {
+    public void publish(String channel, long seq, JsonNode message) {
+        System.out.println("Publishing "+channel);
         Set<WebSocketConnectionState> connections = byChannel.getOrDefault(channel, Set.of());
         for (WebSocketConnectionState state : connections) {
-            state.publishIfNewer(seq, message);
+            state.publishIfNewer(seq, WebSocketServerMessage.event(channel, message));
         }
     }
 

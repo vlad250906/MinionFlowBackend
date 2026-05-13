@@ -19,7 +19,7 @@ import ru.vlad2509.minionflow.application.dto.ProjectMember;
 import java.util.List;
 import java.util.UUID;
 
-@Path("/project-service/projects/{projectId}/members")
+@Path("/projects/{projectId}/members")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class MemberResource {

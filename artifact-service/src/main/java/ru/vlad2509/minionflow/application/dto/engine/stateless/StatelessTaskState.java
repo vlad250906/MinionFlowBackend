@@ -19,4 +19,9 @@ public record StatelessTaskState (
         BaseTaskSummary summary,
         List<StatelessMicrotaskState> microtasks
 ) implements BaseTaskState {
+
+    public StatelessTaskState convert(TaskStatus status){
+        return new StatelessTaskState(taskId, status == TaskStatus.DONE ? seq + 100 : seq, kind, null, status, summary, microtasks);
+    }
+
 }

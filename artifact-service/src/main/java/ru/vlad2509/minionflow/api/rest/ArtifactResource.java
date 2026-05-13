@@ -12,6 +12,7 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import ru.vlad2509.minionflow.api.dto.request.ArtifactMetaUpdateRequest;
 import ru.vlad2509.minionflow.api.dto.request.ArtifactRequest;
 import ru.vlad2509.minionflow.api.dto.request.PaginationParams;
 import ru.vlad2509.minionflow.api.dto.response.PaginatedResponse;
@@ -26,7 +27,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-@Path("/artifact-service/api/projects/{projectId}/artifacts")
+@Path("/api/projects/{projectId}/artifacts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ArtifactResource {
@@ -74,8 +75,9 @@ public class ArtifactResource {
     @PATCH
     @Path("/{artifactId}")
     @Authenticated
-    public JarArtifactDto updateArtifactMetadata(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId, String newAlias) {
-        return jarService.updateJarMetadata(tokenService.parseJwt(jwt), projectId, jarId, newAlias);
+    public JarArtifactDto updateArtifactMetadata(@RestPath("projectId") UUID projectId, @RestPath("artifactId") UUID jarId,
+                                                 @Valid ArtifactMetaUpdateRequest request) {
+        return jarService.updateJarMetadata(tokenService.parseJwt(jwt), projectId, jarId, request.alias());
     }
 
     @GET

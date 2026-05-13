@@ -21,6 +21,9 @@ public class WebSocketEventListener extends EventListener<WebSocketEvent> {
     private final ConnectionManager connectionManager;
 
     @Inject
+    ObjectMapper objectMapper;
+
+    @Inject
     protected WebSocketEventListener(
             @ConfigProperty(name = "service-common.instance-id", defaultValue = "1") int instanceId,
             ConnectionManager connectionManager
@@ -48,15 +51,18 @@ public class WebSocketEventListener extends EventListener<WebSocketEvent> {
     @Override
     protected Channel setupChannel() {
         Channel channel = connectionManager.requestChannel();
+        rabbitService.deleteQueue(channel, QUEUE_NAME+instanceId); // чистим биндинги
         rabbitService.initQueue(channel, QUEUE_NAME+instanceId, true);
         rabbitService.enableConfirmSending(channel);
+        rabbitService.setQos(channel, 1); // нам важна последовательность патчей
         return channel;
     }
 
     @Override
     protected WebSocketEvent parse(String payload) {
+        System.out.println("Websocket got: "+payload);
         try {
-            ObjectReader objectReader = new ObjectMapper().readerFor(WebSocketEvent.class);
+            ObjectReader objectReader = objectMapper.readerFor(WebSocketEvent.class);
             return objectReader.readValue(payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

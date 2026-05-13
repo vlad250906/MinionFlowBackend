@@ -38,28 +38,28 @@ public class WebSocketEventPublisher extends EventPublisher<WebSocketEvent> impl
     @Override
     public void sendStatelessStatePatch(StatelessTaskState state) {
         WebSocketChannelInfo info = websocketChannelFactory.taskStatePatches(state.taskId());
-        super.publish(info.bindingName(), new WebSocketEvent("taskPatch",
-                info.bindingName(), state.seq(), encode(state)));
+        super.publishDirect(info.bindingName(), new WebSocketEvent("taskPatch",
+                info.webSocketName(), state.seq(), encode(state)));
     }
 
     @Override
     public void sendSwarmStatePatch(SwarmTaskState state) {
         WebSocketChannelInfo info = websocketChannelFactory.taskStatePatches(state.taskId());
-        super.publish(info.bindingName(), new WebSocketEvent("taskPatch",
-                info.bindingName(), state.seq(), encode(state)));
+        super.publishDirect(info.bindingName(), new WebSocketEvent("taskPatch",
+                info.webSocketName(), state.seq(), encode(state)));
     }
 
     @Override
     public void sendLogBatch(MicrotaskLogsBatch batch) {
         WebSocketChannelInfo info = websocketChannelFactory.microtaskLogs(batch.microtaskId());
-        super.publish(info.bindingName(), new WebSocketEvent("microtaskLogs",
+        super.publishDirect(info.bindingName(), new WebSocketEvent("microtaskLogs",
                 info.webSocketName(), -1, encode(batch)));
     }
 
     @Override
     protected Channel setupChannel() {
         Channel channel = connectionManager.requestChannel();
-        rabbitService.enableConfirmListener(channel, outboxService::ack, outboxService::nack);
+        //rabbitService.enableConfirmListener(channel, outboxService::ack, outboxService::nack);
         return channel;
     }
 

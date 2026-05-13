@@ -65,6 +65,9 @@ public class ArtifactService {
                                           UUID projectId, UUID artifactId, FileUpload file) {
         String storageKey = storageKeyPrefix + "/" + UUID.randomUUID();
 
+        if(file == null || file.size() <= 0 || file.name() == null)
+            throw new ApiException(ApiError.FILE_EMPTY);
+
         if (!s3Service.upload(storageKey, file))
             throw new ApiException(ApiError.S3_UNAVAILABLE);
 

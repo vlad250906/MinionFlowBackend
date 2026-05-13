@@ -18,7 +18,7 @@ import ru.vlad2509.minionflow.application.dto.light.ExecutionConfigLight;
 import ru.vlad2509.minionflow.application.util.TokenService;
 import java.util.UUID;
 
-@Path("/artifact-service/api/projects/{projectId}/executionConfigs")
+@Path("/api/projects/{projectId}/executionConfigs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ExecutionConfigResource {

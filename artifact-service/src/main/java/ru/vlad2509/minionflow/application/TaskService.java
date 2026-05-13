@@ -28,6 +28,7 @@ import ru.vlad2509.minionflow.application.util.TokenService;
 import ru.vlad2509.minionflow.domain.model.*;
 import ru.vlad2509.minionflow.domain.model.enums.ArtifactType;
 import ru.vlad2509.minionflow.domain.model.enums.ProjectPermission;
+import ru.vlad2509.minionflow.domain.model.enums.TaskStatus;
 import ru.vlad2509.minionflow.infrastructure.persistence.repository.*;
 
 import java.util.List;
@@ -70,7 +71,12 @@ public class TaskService {
     public TaskRunDto createTaskRun(UserContext userContext, UUID projectId, UUID jarId, UUID inputId, UUID configId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.TASK_WRITE);
         TaskRun run = createTaskRunTransactional(userContext, projectId, jarId, inputId, configId);
-        taskEngine.startTask(run);
+        try{
+            taskEngine.startTask(run);
+        }catch(ApiException e){
+            run.setStatus(TaskStatus.FAILED);
+            taskRunRepository.updateStatus(run);
+        }
         return TaskRunDto.fromDomain(run);
     }
 
@@ -104,7 +110,7 @@ public class TaskService {
         if (!projectId.equals(task.getProjectId()))
             throw new ApiException(ApiError.MICROTASK_NOT_FOUND, "exists, but in different project");
         var logs = taskEngine.getMicrotaskLogs(microtaskId, afterSeq, limit);
-        if(logs == null)
+        if (logs == null)
             throw new ApiException(ApiError.TASK_NOT_FOUND);
         return new MicrotaskLogsBatch(microtaskId, taskEngine.getMicrotaskLogs(microtaskId, afterSeq, limit));
     }
@@ -112,15 +118,16 @@ public class TaskService {
     public StatelessTaskState getStatelessState(UserContext userContext, UUID projectId, UUID taskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
         var res = taskEngine.getStatelessState(task);
-        if(res == null)
+        if (res == null)
             throw new ApiException(ApiError.TASK_NOT_FOUND);
-        return res;
+        TaskRun taskRun = taskRunRepository.findById(taskId).orElseThrow(() -> new ApiException(ApiError.UNEXPECTED_ERROR));
+        return res.convert(taskRun.getStatus());
     }
 
     public StatelessMicrotaskRun getStatelessMicrotask(UserContext userContext, UUID projectId, UUID taskId, UUID microtaskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
         var res = taskEngine.getStatelessMicrotask(task, microtaskId);
-        if(res == null)
+        if (res == null)
             throw new ApiException(ApiError.MICROTASK_NOT_FOUND);
         return res;
     }
@@ -128,15 +135,16 @@ public class TaskService {
     public SwarmTaskState getSwarmState(UserContext userContext, UUID projectId, UUID taskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
         var res = taskEngine.getSwarmState(task);
-        if(res == null)
+        if (res == null)
             throw new ApiException(ApiError.TASK_NOT_FOUND);
-        return res;
+        TaskRun taskRun = taskRunRepository.findById(taskId).orElseThrow(() -> new ApiException(ApiError.UNEXPECTED_ERROR));
+        return res.convert(taskRun.getStatus());
     }
 
     public SwarmMicrotaskRun getSwarmMicrotask(UserContext userContext, UUID projectId, UUID taskId, UUID microtaskId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
         var res = taskEngine.getSwarmMicrotask(task, microtaskId);
-        if(res == null)
+        if (res == null)
             throw new ApiException(ApiError.MICROTASK_NOT_FOUND);
         return res;
     }
@@ -144,7 +152,7 @@ public class TaskService {
     public SwarmAgent getSwarmAgent(UserContext userContext, UUID projectId, UUID taskId, UUID agentId) {
         TaskRun task = taskReadAuth(userContext, projectId, taskId);
         var res = taskEngine.getSwarmAgent(task, agentId);
-        if(res == null)
+        if (res == null)
             throw new ApiException(ApiError.AGENT_NOT_FOUND);
         return res;
     }

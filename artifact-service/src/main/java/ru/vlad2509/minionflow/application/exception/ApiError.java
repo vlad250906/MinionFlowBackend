@@ -7,7 +7,7 @@ public enum ApiError {
     UNDEFINED_CHANNEL(404, "undefinedChannel", "Undefined channel name"),
     TASK_CANCEL_FAIL(409, "taskCancelFailed", "Task could not be cancelled at this state"),
     AGENT_NOT_FOUND(404, "agentNotFound", "Agent not found"),
-    MICROTASK_NOT_FOUND(404, "microtaskNotFound", "Microtask not found"),
+    MICROTASK_NOT_FOUND(404, "microtaskNotFound", "Microtask not found or request data is incorrect"),
     OUTPUT_NOT_READY(409, "outputNotAvailable", "Output is not available for this task"),
     INVALID_EXECUTION_CONFIG(400, "invalidExecutionConfig", "Invalid execution config"),
     TASK_NOT_FOUND(404, "taskNotFound", "Task run not found"),
@@ -19,7 +19,7 @@ public enum ApiError {
     INSUFFICIENT_PERMISSION(403, "insufficientPermission", "Insufficient permissions"),
     UNAUTHORIZED(401, "unauthorized", "Unauthorized"),
     I_AM_A_TEAPOT(418, "iAmTeaPot", "I am a teapot (WIP)"),
-    ENGINE_REQUEST_FAILED(520, "engineRequestFailed", "Error failed to process the request"),
+    ENGINE_REQUEST_FAILED(520, "engineRequestFailed", "Error, failed to process the request"),
     ENGINE_UNAVAILABLE(503, "engineUnavailable", "Engine is unavailable. Try again later"),
     S3_UNAVAILABLE(503, "s3_Unavailable", "S3 service is unavailable. Try again later"),
     UNEXPECTED_ERROR(500, "unexpectedError", "Unexpected error");

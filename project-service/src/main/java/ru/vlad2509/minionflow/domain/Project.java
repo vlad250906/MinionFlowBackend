@@ -14,7 +14,7 @@ public class Project {
 
     public Project(ProjectNameVo projectName, String projectDescription) {
         this.projectName = projectName.value();
-        this.projectDescription = projectDescription;
+        this.projectDescription = projectDescription == null ? "" : projectDescription;
         this.id = UUID.randomUUID();
         this.createdAt = Instant.now();
     }
@@ -22,7 +22,7 @@ public class Project {
     public Project(UUID id, String projectName, String projectDescription, Instant createdAt) {
         this.id = id;
         this.projectName = projectName;
-        this.projectDescription = projectDescription;
+        this.projectDescription = projectDescription == null ? "" : projectDescription;
         this.createdAt = createdAt;
     }
 
@@ -51,6 +51,6 @@ public class Project {
     }
 
     public void setProjectDescription(String projectDescription) {
-        this.projectDescription = projectDescription;
+        this.projectDescription = projectDescription == null ? "" : projectDescription;
     }
 }

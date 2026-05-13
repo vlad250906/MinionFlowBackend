@@ -9,7 +9,7 @@ import java.util.UUID;
 public class StorageKeyFactory {
 
     public String generateJarPrefix(UUID projectId) {
-        return projectId.toString() + "/jars";
+        return projectId.toString() + "/artifacts";
     }
 
     public String generateInputPrefix(UUID projectId) {

@@ -14,7 +14,7 @@ public enum TaskStatus {
         return switch(next){
             case CREATED -> false;
             case STARTING -> this == CREATED;
-            case RUNNING -> this == CREATED || this == RUNNING;
+            case RUNNING -> this == CREATED || this == STARTING;
             case FINISHED, TIME_OUT -> this == CREATED ||  this == STARTING || this == RUNNING;
             case CANCELED, FAILED -> !isTerminal();
             case DONE -> this == CREATED || this == STARTING || this == RUNNING || this == FINISHED;

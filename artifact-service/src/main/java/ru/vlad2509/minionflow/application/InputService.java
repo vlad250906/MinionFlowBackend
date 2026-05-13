@@ -55,7 +55,7 @@ public class InputService {
         InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId)
                 .orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "input artifact not found"));
         if (!projectId.equals(inputArtifact.getProjectId()))
-            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "could exists, but in different project");
         inputArtifact.setAlias(alias);
         inputArtifact.setInputType(type);
         inputArtifactRepository.update(inputArtifact);
@@ -65,7 +65,7 @@ public class InputService {
     public void deleteInput(UserContext userContext, UUID projectId, UUID artifactId) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
         if (!projectId.equals(inputArtifactRepository.findByArtifactId(artifactId).map(InputArtifact::getProjectId).orElse(null)))
-            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "could exists, but in different project");
         artifactService.deleteArtifact(userContext, artifactId);
     }
 
@@ -74,7 +74,7 @@ public class InputService {
         InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifactId)
                 .orElseThrow(() -> new ApiException(ApiError.ARTIFACT_NOT_FOUND, "input artifact not found"));
         if (!projectId.equals(inputArtifact.getProjectId()))
-            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "could exists, but in different project");
         return InputArtifactDto.fromDomain(inputArtifact);
     }
 
@@ -87,7 +87,7 @@ public class InputService {
     public InputArtifactDto updateInputContent(UserContext userContext, UUID projectId, UUID artifactId, FileUpload file) {
         tokenService.authorize(userContext, projectId, ProjectPermission.INPUT_WRITE);
         if (!projectId.equals(inputArtifactRepository.findByArtifactId(artifactId).map(InputArtifact::getProjectId).orElse(null)))
-            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "exists, but in different project");
+            throw new ApiException(ApiError.ARTIFACT_NOT_FOUND, "could exists, but in different project");
         Artifact artifact = artifactService.updateArtifactContent(userContext,
                 storageKeyFactory.generateInputPrefix(projectId), projectId, artifactId, file);
         InputArtifact inputArtifact = inputArtifactRepository.findByArtifactId(artifact.getId()).orElseThrow(

@@ -73,26 +73,6 @@ public class MinionFlowEngine implements TaskEngine {
             .expireAfterAccess(Duration.ofMinutes(30))
             .build();
 
-    @PostConstruct
-    public void init() {
-        logBatchEventListener.setEventHandler(taskPatchHandler::onLogBatch);
-        taskStateEventListener.setEventHandler(baseTaskState -> {
-            switch (baseTaskState) {
-                case StatelessTaskState sts -> {
-                    for (StatelessMicrotaskState micro : sts.microtasks()) {
-                        microtaskToTask.put(micro.microtaskId(), sts.taskId());
-                    }
-                    taskPatchHandler.onStatelessStatePatch(sts);
-                }
-                case SwarmTaskState sts -> {
-                    // FIXME
-                    // А тут микротаски не получить вообще никак
-                    taskPatchHandler.onSwarmStatePatch(sts);
-                }
-                default -> LOG.warn("Received unknown subclass of BaseTaskState: {}, skipping it", baseTaskState);
-            }
-        });
-    }
 
     @Override
     public void startTask(TaskRun taskRun) {
@@ -102,7 +82,7 @@ public class MinionFlowEngine implements TaskEngine {
         EngineExecutionSpec executionSpec = EngineExecutionSpec.fromDomain(taskRun.getExecutionConfig().getContent());
         EngineInputSpec inputSpec = new EngineInputSpec(
                 EngineInputType.fromDomain(taskRun.getInputArtifact().getInputType()),
-                new EngineSourceSpec(bucketName, Path.of(inputArtifactName)));
+                new EngineSourceSpec(bucketName, inputArtifactName));
         EngineOutputSpec outputSpec = new EngineOutputSpec(
                 new EngineDestinationSpec(EngineDestinationType.S3, bucketName, "currently-unused"),
                 new EnginePerTaskSpec("currently-unused", new EngineResultSpec(EngineResultFormat.JSON, "currently-unused")),
@@ -113,10 +93,11 @@ public class MinionFlowEngine implements TaskEngine {
                 new EngineTaskConfiguration(executionSpec, inputSpec, outputSpec, securitySpec));
 
         try {
+            LOG.info("Sending start task request: {}", request.toString());
             engineApiRestClient.runTask(request);
         } catch (ApiException ex) {
             LOG.error("Failed to start task in engine", ex);
-            throw new ApiException(ApiError.ENGINE_REQUEST_FAILED);
+            throw new ApiException(ApiError.ENGINE_REQUEST_FAILED, ApiError.ENGINE_REQUEST_FAILED.getMessage()+"; "+ex.getMessage());
         } catch (Exception ex) {
             LOG.error("Engine not available", ex);
             throw new ApiException(ApiError.ENGINE_UNAVAILABLE);
@@ -221,5 +202,24 @@ public class MinionFlowEngine implements TaskEngine {
     @Override
     public void registerPatchHandler(TaskPatchHandler handler) {
         this.taskPatchHandler = handler;
+        logBatchEventListener.setEventHandler(taskPatchHandler::onLogBatch);
+        taskStateEventListener.setEventHandler(baseTaskState -> {
+            switch (baseTaskState) {
+                case StatelessTaskState sts -> {
+                    for (StatelessMicrotaskState micro : sts.microtasks()) {
+                        microtaskToTask.put(micro.microtaskId(), sts.taskId());
+                    }
+                    taskPatchHandler.onStatelessStatePatch(sts);
+                }
+                case SwarmTaskState sts -> {
+                    // FIXME
+                    // А тут микротаски не получить вообще никак
+                    taskPatchHandler.onSwarmStatePatch(sts);
+                }
+                default -> LOG.warn("Received unknown subclass of BaseTaskState: {}, skipping it", baseTaskState);
+            }
+        });
+        logBatchEventListener.startListening();
+        taskStateEventListener.startListening();
     }
 }

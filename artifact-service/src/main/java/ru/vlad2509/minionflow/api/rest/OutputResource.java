@@ -17,7 +17,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-@Path("/artifact-service/api/projects/{projectId}/outputs")
+@Path("/api/projects/{projectId}/outputs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class OutputResource {

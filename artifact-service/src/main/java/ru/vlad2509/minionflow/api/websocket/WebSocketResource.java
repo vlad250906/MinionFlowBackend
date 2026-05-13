@@ -1,13 +1,12 @@
 package ru.vlad2509.minionflow.api.websocket;
 
 import io.quarkus.security.Authenticated;
-import io.quarkus.websockets.next.OnClose;
-import io.quarkus.websockets.next.OnTextMessage;
-import io.quarkus.websockets.next.WebSocket;
-import io.quarkus.websockets.next.WebSocketConnection;
+import io.quarkus.websockets.next.*;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.vlad2509.minionflow.api.dto.websocket.WebSocketClientMessage;
 import ru.vlad2509.minionflow.api.dto.websocket.WebSocketServerMessage;
 import ru.vlad2509.minionflow.application.WebSocketService;
@@ -27,6 +26,8 @@ public class WebSocketResource {
 
     @Inject
     TokenService tokenService;
+
+    private static final Logger LOG = LoggerFactory.getLogger(WebSocketResource.class);
 
     @OnTextMessage
     public WebSocketServerMessage onMessage(WebSocketClientMessage msg, WebSocketConnection connection) {
@@ -57,5 +58,12 @@ public class WebSocketResource {
     @OnClose
     public void onClose(WebSocketConnection connection) {
         service.remove(connection);
+    }
+
+    @OnError
+    public WebSocketServerMessage onError(Throwable t, WebSocketConnection connection) {
+        service.remove(connection);
+        LOG.error("unknown error: ", t);
+        return WebSocketServerMessage.error(null, new ApiException(ApiError.UNEXPECTED_ERROR));
     }
 }

@@ -41,6 +41,12 @@ public abstract class EventPublisher<T> {
         outboxService.add(messageId.toString(), routingKey, payload);
     }
 
+    public void publishDirect(String routingKey, T message) {
+        UUID messageId = UUID.randomUUID();
+        String payload = serializeMessage(message);
+        sendToBroker(messageId.toString(), routingKey, payload);
+    }
+
     public boolean sendToBroker(String messageId, String routingKey, String content) {
         if (channel == null)
             channel = setupChannel();

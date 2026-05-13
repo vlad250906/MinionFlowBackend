@@ -26,7 +26,7 @@ import ru.vlad2509.minionflow.application.util.TokenService;
 
 import java.util.UUID;
 
-@Path("/artifact-service/api/projects/{projectId}/tasks")
+@Path("/api/projects/{projectId}/tasks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class TaskResource {

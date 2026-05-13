@@ -3,5 +3,5 @@ package ru.vlad2509.minionflow;
 public class MyApplication {
 
     public static final boolean IS_DEV = true;
-    public static final String ENGINE_USED = "MockTaskEngine";
+    public static final String ENGINE_USED = "MinionFlowTaskEngine";
 }

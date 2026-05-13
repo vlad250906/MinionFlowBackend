@@ -12,6 +12,7 @@ import ru.vlad2509.minionflow.domain.model.Artifact;
 import ru.vlad2509.minionflow.domain.model.TaskRun;
 import ru.vlad2509.minionflow.infrastructure.persistence.model.*;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -77,17 +78,21 @@ public class TaskRunRepository implements PanacheRepository<TaskRunEntity> {
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     public boolean updateOutputsIfEmpty(TaskRun taskRun) {
+        System.out.println("Getting task");
         TaskRunEntity taskRunEntity = find("id", taskRun.getId())
                 .withLock(LockModeType.PESSIMISTIC_WRITE)
                 .firstResult();
+        System.out.println("Got task");
 
         if (taskRunEntity == null || (taskRunEntity.outputs != null && !taskRunEntity.outputs.isEmpty()))
             return false;
+        System.out.println("Got task 2");
 
         if (taskRunEntity.outputs == null)
             taskRunEntity.outputs = new HashSet<>();
-
-        taskRunEntity.outputs.addAll(artifactRepository.find("id in ?1", taskRun.getOutputs().stream().map(Artifact::getId)).list());
+        System.out.println("Got task 3: "+taskRun.getOutputs().stream().map(Artifact::getId).toList());
+        taskRunEntity.outputs.addAll(artifactRepository.find("id in ?1", taskRun.getOutputs().stream().map(Artifact::getId).toList()).list());
+        System.out.println("Got task 5");
         return true;
     }
 
@@ -98,9 +103,15 @@ public class TaskRunRepository implements PanacheRepository<TaskRunEntity> {
                 .singleResultOptional().map(TaskRunEntity::toDomain);
     }
 
-    @Transactional(Transactional.TxType.REQUIRED)
+    @Transactional
     public void updateStatus(TaskRun taskRun){
         this.update("status = ?1 where id = ?2", taskRun.getStatus(), taskRun.getId());
+        switch(taskRun.getStatus()){
+            case STARTING -> this.update("startedAt = ?1 where id = ?2", Instant.now(), taskRun.getId());
+            case FINISHED -> this.update("finishedAt = ?1 where id = ?2", Instant.now(), taskRun.getId());
+            case DONE, FAILED -> this.update("doneAt = ?1 where id = ?2", Instant.now(), taskRun.getId());
+            default -> {}
+        }
     }
 
 }

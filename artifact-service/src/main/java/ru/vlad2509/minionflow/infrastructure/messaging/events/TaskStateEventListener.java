@@ -28,6 +28,8 @@ public class TaskStateEventListener extends EventListener<BaseTaskState> {
         Channel channel = connectionManager.requestChannel();
         rabbitService.initQueue(channel, QUEUE, true);
         rabbitService.enableConfirmSending(channel);
+        rabbitService.setQos(channel, 1);  // нам важна последовательность патчей, также их нельзя скипать
+        // TODO: в идеале бы какой-нибудь partition по taskId
         return channel;
     }
 

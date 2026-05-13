@@ -16,10 +16,13 @@ public class LogBatchEventListener extends EventListener<MicrotaskLogsBatch> {
     @Inject
     ConnectionManager connectionManager;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     private static final String QUEUE = "MICROTASK_LOGS";
 
     protected LogBatchEventListener() {
-        super(QUEUE, true);
+        super(QUEUE, false); // у логов нету id (или message_id), не получится их дедуплицировать
     }
 
     @Override
@@ -33,7 +36,7 @@ public class LogBatchEventListener extends EventListener<MicrotaskLogsBatch> {
     @Override
     protected MicrotaskLogsBatch parse(String payload) {
         try {
-            ObjectReader objectReader = new ObjectMapper().readerFor(MicrotaskLogsBatch.class);
+            ObjectReader objectReader = objectMapper.readerFor(MicrotaskLogsBatch.class);
             return objectReader.readValue(payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

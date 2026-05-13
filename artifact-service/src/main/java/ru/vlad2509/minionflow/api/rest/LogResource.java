@@ -12,7 +12,7 @@ import ru.vlad2509.minionflow.application.util.TokenService;
 
 import java.util.UUID;
 
-@Path("/artifact-service/api/projects/{projectId}/logs")
+@Path("/api/projects/{projectId}/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class LogResource {

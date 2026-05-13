@@ -19,7 +19,7 @@ import ru.vlad2509.minionflow.application.dto.ProjectInfoShort;
 
 import java.util.UUID;
 
-@Path("/project-service/projects")
+@Path("/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ProjectResource {
@@ -44,7 +44,7 @@ public class ProjectResource {
     @POST
     @Path("")
     @Authenticated
-    public ProjectInfo createProject(ProjectInfoRequest dto) {
+    public ProjectInfo createProject(@Valid ProjectInfoRequest dto) {
         return projectService.createProject(tokenService.parseJwt(jwt), dto.name(), dto.description());
     }
 
@@ -66,7 +66,7 @@ public class ProjectResource {
     @PATCH
     @Path("/{projectId}")
     @Authenticated
-    public ProjectInfo updateProject(@RestPath("projectId") UUID id, ProjectInfoRequest dto) {
+    public ProjectInfo updateProject(@RestPath("projectId") UUID id, @Valid ProjectInfoRequest dto) {
         return projectService.updateProject(tokenService.parseJwt(jwt), id, dto.name(), dto.description());
     }
 

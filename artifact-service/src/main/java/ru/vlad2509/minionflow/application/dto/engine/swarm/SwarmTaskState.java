@@ -3,6 +3,7 @@ package ru.vlad2509.minionflow.application.dto.engine.swarm;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ru.vlad2509.minionflow.application.dto.engine.BaseTaskState;
 import ru.vlad2509.minionflow.application.dto.engine.EngineTaskStatus;
+import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessTaskState;
 import ru.vlad2509.minionflow.domain.model.enums.TaskStatus;
 
 import java.util.List;
@@ -20,4 +21,9 @@ public record SwarmTaskState (
         List<SwarmAgentState> agentStates
 
 ) implements BaseTaskState {
+
+    public SwarmTaskState convert(TaskStatus status){
+        return new SwarmTaskState(taskId, status == TaskStatus.DONE ? seq + 100 : seq, kind, null, status, summary, agentStates);
+    }
+
 }

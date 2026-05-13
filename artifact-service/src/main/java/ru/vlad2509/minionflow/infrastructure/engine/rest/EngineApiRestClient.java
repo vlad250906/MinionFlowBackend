@@ -6,6 +6,7 @@ import io.smallrye.common.annotation.Blocking;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import ru.vlad2509.minionflow.MyApplication;
 import ru.vlad2509.minionflow.application.dto.engine.MicrotaskLogsBatch;
 import jakarta.ws.rs.core.MediaType;
 import ru.vlad2509.minionflow.application.dto.engine.stateless.StatelessMicrotaskRun;
@@ -25,7 +26,8 @@ public interface EngineApiRestClient {
     @POST
     @Path("/api/tasks/execute")
     @Produces(MediaType.TEXT_PLAIN)
-    String runTask(EngineCreateTaskRunRequest createTaskRunRequest);
+    String
+    runTask(EngineCreateTaskRunRequest createTaskRunRequest);
 
     @GET
     @Path("/api/tasks/swarm/{taskId}/state")
@@ -62,7 +64,7 @@ public interface EngineApiRestClient {
         } catch (Exception ignored) {
         }
 
-        return new ApiException(status, "nope", status >= 500 ? "" : body);
+        return new ApiException(status, "nope", status >= 500 ? (MyApplication.IS_DEV ? body : "") : body);
     }
 
 }
