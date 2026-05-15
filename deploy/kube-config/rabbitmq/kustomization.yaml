@@ -1,0 +1,7 @@
+resources:
+  - rabbitmq.yaml
+
+configMapGenerator:
+  - name: rabbitmq-init
+    files:
+      - init/definitions.json

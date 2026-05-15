@@ -1,0 +1,89 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "queues": [
+    {
+      "name": "TASK_EXECUTION_REQUEST",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+      }
+    },
+    {
+      "name": "TASK_LIFECYCLE_EVENTS",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    },
+    {
+      "name": "TASK_STATE_PATCHES",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    },
+    {
+      "name": "MICROTASK_RESULT",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    },
+    {
+      "name": "MICROTASK_STATUS",
+      "vhost": "/",
+      "durable": false,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    },
+    {
+      "name": "TASK_RESULT_STATUS",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    },
+    {
+      "name": "MICROTASK_LOGS_RAW",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    },
+    {
+      "name": "SWARM_STATE",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    },
+    {
+      "name": "MICROTASK_LOGS",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+
+      }
+    }
+  ]
+}

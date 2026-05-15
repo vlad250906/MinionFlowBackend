@@ -1,0 +1,41 @@
+{
+  "alias": "swarm-sync-curl-config",
+  "config": {
+    "type": "swarm-sync",
+    "swarm": {
+        "iterations": 10,
+        "agentCount" : 100,
+        "topology": {
+          "type" : "ring",
+          "numberOfNeighbors" : 4
+        }
+      },
+      "scheduling": {
+        "mode": "fixed",
+        "batchSize" : 1000,
+        "parallelism": 3
+      },
+      "worker": {
+        "bound": "cpu",
+        "concurrency": 1,
+        "resources": {
+          "cpu": "500m",
+          "memory": "128Mi"
+        }
+      },
+      "timeouts": {
+        "microtaskSeconds": 60,
+        "taskSeconds": 3600
+      },
+      "retry": {
+        "maxAttempts": 3,
+        "backoff": {
+          "strategy": "exponential",
+          "baseMs": 500,
+          "maxMs": 10000,
+          "jitter": true
+        }
+      }
+  }
+
+}

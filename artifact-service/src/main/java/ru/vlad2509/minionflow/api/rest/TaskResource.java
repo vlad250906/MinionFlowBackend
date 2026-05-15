@@ -82,7 +82,7 @@ public class TaskResource {
     @Path("/{taskId}/stats/stateless")
     @Authenticated
     public StatelessTaskState getStatelessState(@RestPath("projectId") UUID projectId,
-                                                @PathParam("taskId") UUID taskId) {
+                                                @RestPath("taskId") UUID taskId) {
         return taskService.getStatelessState(tokenService.parseJwt(jwt), projectId, taskId);
     }
 
@@ -90,8 +90,8 @@ public class TaskResource {
     @Path("/{taskId}/microtasks/stateless/{microtaskId}")
     @Authenticated
     public StatelessMicrotaskRun getStatelessMicrotask(@RestPath("projectId") UUID projectId,
-                                                       @PathParam("taskId") UUID taskId,
-                                                       @PathParam("microtaskId") UUID microtaskId) {
+                                                       @RestPath("taskId") UUID taskId,
+                                                       @RestPath("microtaskId") UUID microtaskId) {
         return taskService.getStatelessMicrotask(tokenService.parseJwt(jwt), projectId, taskId, microtaskId);
     }
 
@@ -99,7 +99,7 @@ public class TaskResource {
     @Path("/{taskId}/stats/swarm")
     @Authenticated
     public SwarmTaskState getSwarmState(@RestPath("projectId") UUID projectId,
-                                        @PathParam("taskId") UUID taskId) {
+                                        @RestPath("taskId") UUID taskId) {
         return taskService.getSwarmState(tokenService.parseJwt(jwt), projectId, taskId);
     }
 
@@ -107,8 +107,8 @@ public class TaskResource {
     @Path("/{taskId}/microtasks/swarm/{microtaskId}")
     @Authenticated
     public SwarmMicrotaskRun getSwarmMicrotask(@RestPath("projectId") UUID projectId,
-                                               @PathParam("taskId") UUID taskId,
-                                               @PathParam("microtaskId") UUID microtaskId) {
+                                               @RestPath("taskId") UUID taskId,
+                                               @RestPath("microtaskId") UUID microtaskId) {
         return taskService.getSwarmMicrotask(tokenService.parseJwt(jwt), projectId, taskId, microtaskId);
     }
 
@@ -116,8 +116,8 @@ public class TaskResource {
     @Path("/{taskId}/agents/{agentId}")
     @Authenticated
     public SwarmAgent getSwarmAgent(@RestPath("projectId") UUID projectId,
-                                    @PathParam("taskId") UUID taskId,
-                                    @PathParam("agentId") UUID agentId) {
+                                    @RestPath("taskId") UUID taskId,
+                                    @RestPath("agentId") UUID agentId) {
         return taskService.getSwarmAgent(tokenService.parseJwt(jwt), projectId, taskId, agentId);
     }
 

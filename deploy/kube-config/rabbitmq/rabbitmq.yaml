@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  type: ClusterIP
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: management
+      port: 15672
+      targetPort: 15672
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+spec:
+  serviceName: rabbitmq
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: rabbitmq
+
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          ports:
+            - containerPort: 5672
+              name: amqp
+            - containerPort: 15672
+              name: management
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: password
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+
+
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rabbitmq-init
+spec:
+  backoffLimit: 10
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      volumes:
+        - name: defs
+          configMap:
+            name: rabbitmq-init
+
+
+      initContainers:
+        - name: wait-rabbitmq
+          image: curlimages/curl:8.5.0
+          env:
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: password
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              echo "Waiting for RabbitMQ..."
+              until curl -sS -u "${RABBITMQ_USER}:${RABBITMQ_PASSWORD}" \
+                "http://rabbitmq:15672/api/overview" >/dev/null; do
+                sleep 2
+              done
+              echo "RabbitMQ is up"
+
+      containers:
+        - name: init
+          image: curlimages/curl:8.5.0
+          volumeMounts:
+            - name: defs
+              mountPath: /work
+          env:
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: password
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for RabbitMQ management API..."
+              until curl -sS -u "${RABBITMQ_USER}:${RABBITMQ_PASSWORD}" \
+                "http://rabbitmq:15672/api/overview" >/dev/null; do
+                sleep 2
+              done
+
+              echo "Importing definitions..."
+              curl -sS --fail-with-body \
+                --retry 60 --retry-connrefused --retry-all-errors --retry-delay 1 \
+                -u "${RABBITMQ_USER}:${RABBITMQ_PASSWORD}" \
+                -H "content-type: application/json" \
+                -X POST "http://rabbitmq:15672/api/definitions" \
+                --data-binary "@/work/definitions.json" \
+                -w "\nHTTP %{http_code}\n" 
+              
+              exit 0

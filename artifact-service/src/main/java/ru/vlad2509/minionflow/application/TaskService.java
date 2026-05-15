@@ -111,7 +111,7 @@ public class TaskService {
             throw new ApiException(ApiError.MICROTASK_NOT_FOUND, "exists, but in different project");
         var logs = taskEngine.getMicrotaskLogs(microtaskId, afterSeq, limit);
         if (logs == null)
-            throw new ApiException(ApiError.TASK_NOT_FOUND);
+            throw new ApiException(ApiError.MICROTASK_NOT_FOUND);
         return new MicrotaskLogsBatch(microtaskId, taskEngine.getMicrotaskLogs(microtaskId, afterSeq, limit));
     }
 

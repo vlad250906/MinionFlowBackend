@@ -1,0 +1,10 @@
+resources:
+  - postgres.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: postgres-init
+    files:
+      - init/01-create-dbs.sql

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/00-env.sh"
+source "$ROOT_DIR/lib.sh"
+
+OUT="$RESP_DIR/ERR-03.json"
+echo "ERR-03: конфликт данных - повторная регистрация, ожидается 409"
+curl -sS -i -X POST "$ID_REGISTER" -H 'Content-Type: application/json' -d "{\"email\":{\"value\":\"$OWNER_EMAIL\"},\"username\":{\"value\":\"$OWNER_USERNAME\"},\"password\":{\"value\":\"$OWNER_PASSWORD\"}}" | tee "$OUT"
+

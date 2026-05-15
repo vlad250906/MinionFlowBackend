@@ -1,0 +1,1806 @@
+openapi: 3.0.4
+components:
+  schemas:
+    ArtifactDto:
+      type: object
+      properties:
+        artifactId:
+          $ref: '#/components/schemas/UUID'
+        size:
+          type: integer
+          format: int64
+        originalName:
+          type: string
+        contentType:
+          type: string
+        createdAt:
+          $ref: '#/components/schemas/Instant'
+        ownerId:
+          $ref: '#/components/schemas/UUID'
+    ArtifactMetaUpdateRequest:
+      type: object
+      required:
+      - alias
+      properties:
+        alias:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: \S
+    ArtifactRequest:
+      type: object
+      required:
+      - alias
+      properties:
+        alias:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: \S
+        file:
+          type: string
+          format: binary
+    BackoffSpec:
+      type: object
+      required:
+      - strategy
+      properties:
+        strategy:
+          type: string
+          pattern: \S
+        baseMs:
+          type: integer
+          format: int32
+          minimum: 0
+        maxMs:
+          type: integer
+          format: int32
+          minimum: 0
+        jitter:
+          type: boolean
+    BaseTaskSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        queued:
+          type: integer
+          format: int32
+        running:
+          type: integer
+          format: int32
+        succeeded:
+          type: integer
+          format: int32
+        failed:
+          type: integer
+          format: int32
+        timedOut:
+          type: integer
+          format: int32
+        tasksPerSec:
+          type: number
+          format: double
+    EngineTaskStatus:
+      type: string
+      enum:
+      - STARTING
+      - RUNNING
+      - SUCCEEDED
+      - FAILED
+      - TIMED_OUT
+    ExecutionConfigContent:
+      type: object
+      required:
+      - type
+      - scheduling
+      - worker
+      - timeouts
+      - retry
+      properties:
+        type:
+          $ref: '#/components/schemas/ExecutionType'
+        network:
+          $ref: '#/components/schemas/NetworkSpec'
+        scheduling:
+          $ref: '#/components/schemas/SchedulingSpec'
+        swarm:
+          $ref: '#/components/schemas/SwarmSpec'
+        worker:
+          $ref: '#/components/schemas/WorkerSpec'
+        timeouts:
+          $ref: '#/components/schemas/TimeoutsSpec'
+        retry:
+          $ref: '#/components/schemas/RetrySpec'
+    ExecutionConfigDto:
+      type: object
+      properties:
+        configId:
+          $ref: '#/components/schemas/UUID'
+        alias:
+          type: string
+        projectId:
+          $ref: '#/components/schemas/UUID'
+        ownerId:
+          $ref: '#/components/schemas/UUID'
+        createdAt:
+          $ref: '#/components/schemas/Instant'
+        config:
+          $ref: '#/components/schemas/ExecutionConfigContent'
+    ExecutionConfigLight:
+      type: object
+      properties:
+        configId:
+          $ref: '#/components/schemas/UUID'
+        alias:
+          type: string
+        ownerId:
+          $ref: '#/components/schemas/UUID'
+        createdAt:
+          $ref: '#/components/schemas/Instant'
+    ExecutionConfigRequest:
+      type: object
+      required:
+      - alias
+      properties:
+        alias:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: \S
+        config:
+          $ref: '#/components/schemas/ExecutionConfigContent'
+    ExecutionType:
+      type: string
+      enum:
+      - stateless
+      - swarm-sync
+    InputArtifactDto:
+      type: object
+      properties:
+        artifact:
+          $ref: '#/components/schemas/ArtifactDto'
+        alias:
+          type: string
+        inputType:
+          $ref: '#/components/schemas/InputType'
+    InputArtifactRequest:
+      type: object
+      required:
+      - alias
+      - inputType
+      properties:
+        alias:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: \S
+        inputType:
+          $ref: '#/components/schemas/InputType'
+        file:
+          type: string
+          format: binary
+    InputMetaUpdateRequest:
+      type: object
+      required:
+      - alias
+      - inputType
+      properties:
+        alias:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: \S
+        inputType:
+          $ref: '#/components/schemas/InputType'
+    InputType:
+      type: string
+      enum:
+      - JSONL
+    Instant:
+      type: string
+      format: date-time=
+    JarArtifactDto:
+      type: object
+      properties:
+        artifact:
+          $ref: '#/components/schemas/ArtifactDto'
+        alias:
+          type: string
+    LocalDateTime:
+      type: string
+      format: date-time
+    MicrotaskLog:
+      type: object
+      properties:
+        loglevel:
+          type: string
+        seq:
+          type: integer
+          format: int64
+        timestamp:
+          $ref: '#/components/schemas/Instant'
+        message:
+          type: string
+    MicrotaskLogsBatch:
+      type: object
+      properties:
+        microtaskId:
+          $ref: '#/components/schemas/UUID'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/MicrotaskLog'
+    MicrotaskRunStatus:
+      type: string
+      enum:
+      - QUEUED
+      - STARTING
+      - RUNNING
+      - SUCCEEDED
+      - FAILED
+      - TIMED_OUT
+    NetworkSpec:
+      type: object
+      required:
+      - allowDomains
+      properties:
+        allowDomains:
+          type: array
+          items:
+            type: string
+    OutputList:
+      type: object
+      properties:
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArtifactDto'
+    PaginatedResponseExecutionConfigLight:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        pageIndex:
+          type: integer
+          format: int32
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExecutionConfigLight'
+    PaginatedResponseInputArtifactDto:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        pageIndex:
+          type: integer
+          format: int32
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputArtifactDto'
+    PaginatedResponseJarArtifactDto:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        pageIndex:
+          type: integer
+          format: int32
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/JarArtifactDto'
+    PaginatedResponseTaskRunLight:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        pageIndex:
+          type: integer
+          format: int32
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRunLight'
+    RetrySpec:
+      type: object
+      required:
+      - backoff
+      properties:
+        maxAttempts:
+          type: integer
+          format: int32
+          minimum: 0
+        backoff:
+          $ref: '#/components/schemas/BackoffSpec'
+    SchedulingSpec:
+      type: object
+    StatelessMicrotaskRun:
+      type: object
+      properties:
+        taskId:
+          $ref: '#/components/schemas/UUID'
+        microtaskId:
+          $ref: '#/components/schemas/UUID'
+        displayIndex:
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/MicrotaskRunStatus'
+        createdAt:
+          $ref: '#/components/schemas/LocalDateTime'
+        startedAt:
+          $ref: '#/components/schemas/LocalDateTime'
+        finishedAt:
+          $ref: '#/components/schemas/LocalDateTime'
+        runDeadline:
+          $ref: '#/components/schemas/LocalDateTime'
+        runTimeoutSeconds:
+          type: integer
+          format: int64
+        reason:
+          type: string
+    StatelessMicrotaskState:
+      type: object
+      properties:
+        microtaskId:
+          $ref: '#/components/schemas/UUID'
+        displayIndex:
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/MicrotaskRunStatus'
+    StatelessTaskState:
+      type: object
+      properties:
+        taskId:
+          $ref: '#/components/schemas/UUID'
+        seq:
+          type: integer
+          format: int64
+        kind:
+          type: string
+        status:
+          $ref: '#/components/schemas/EngineTaskStatus'
+        taskStatus:
+          $ref: '#/components/schemas/TaskStatus'
+        summary:
+          $ref: '#/components/schemas/BaseTaskSummary'
+        microtasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatelessMicrotaskState'
+    SwarmAgent:
+      type: object
+      properties:
+        agentId:
+          $ref: '#/components/schemas/UUID'
+        taskId:
+          $ref: '#/components/schemas/UUID'
+        agentIndex:
+          type: integer
+          format: int32
+        inputData:
+          type: string
+        stateData:
+          type: string
+        statePhase:
+          $ref: '#/components/schemas/SwarmPhase'
+        stateIteration:
+          type: integer
+          format: int32
+    SwarmAgentState:
+      type: object
+      properties:
+        agentId:
+          $ref: '#/components/schemas/UUID'
+        displayIndex:
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/MicrotaskRunStatus'
+        currentIteration:
+          type: integer
+          format: int32
+        currentPhase:
+          $ref: '#/components/schemas/SwarmPhase'
+    SwarmMicrotaskRun:
+      type: object
+      properties:
+        taskId:
+          $ref: '#/components/schemas/UUID'
+        microtaskId:
+          $ref: '#/components/schemas/UUID'
+        displayIndex:
+          type: integer
+          format: int32
+        status:
+          $ref: '#/components/schemas/MicrotaskRunStatus'
+        createdAt:
+          $ref: '#/components/schemas/LocalDateTime'
+        startedAt:
+          $ref: '#/components/schemas/LocalDateTime'
+        finishedAt:
+          $ref: '#/components/schemas/LocalDateTime'
+        runDeadline:
+          $ref: '#/components/schemas/LocalDateTime'
+        runTimeoutSeconds:
+          type: integer
+          format: int64
+        reason:
+          type: string
+        agentId:
+          $ref: '#/components/schemas/UUID'
+        phase:
+          $ref: '#/components/schemas/SwarmPhase'
+        iteration:
+          type: integer
+          format: int32
+    SwarmPhase:
+      type: string
+      enum:
+      - INIT
+      - STEP
+      - FINISH
+      - FAILED
+    SwarmSpec:
+      type: object
+      required:
+      - topology
+      properties:
+        iterations:
+          type: integer
+          format: int32
+          minimum: 0
+        agentCount:
+          type: integer
+          format: int32
+          minimum: 0
+        topology:
+          $ref: '#/components/schemas/SwarmTopologySpec'
+    SwarmTaskState:
+      type: object
+      properties:
+        taskId:
+          $ref: '#/components/schemas/UUID'
+        seq:
+          type: integer
+          format: int64
+        kind:
+          type: string
+        status:
+          $ref: '#/components/schemas/EngineTaskStatus'
+        taskStatus:
+          $ref: '#/components/schemas/TaskStatus'
+        summary:
+          $ref: '#/components/schemas/SwarmTaskSummary'
+        agentStates:
+          type: array
+          items:
+            $ref: '#/components/schemas/SwarmAgentState'
+    SwarmTaskSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        queued:
+          type: integer
+          format: int32
+        running:
+          type: integer
+          format: int32
+        succeeded:
+          type: integer
+          format: int32
+        failed:
+          type: integer
+          format: int32
+        timedOut:
+          type: integer
+          format: int32
+        tasksPerSec:
+          type: number
+          format: double
+        currentIteration:
+          type: integer
+          format: int32
+        currentPhase:
+          $ref: '#/components/schemas/SwarmPhase'
+    SwarmTopologySpec:
+      type: object
+    TaskCreateRequest:
+      type: object
+      properties:
+        jarId:
+          $ref: '#/components/schemas/UUID'
+        inputId:
+          $ref: '#/components/schemas/UUID'
+        configId:
+          $ref: '#/components/schemas/UUID'
+    TaskRunDto:
+      type: object
+      properties:
+        taskId:
+          $ref: '#/components/schemas/UUID'
+        projectId:
+          $ref: '#/components/schemas/UUID'
+        launchedByUser:
+          $ref: '#/components/schemas/UUID'
+        executionType:
+          $ref: '#/components/schemas/ExecutionType'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        jarId:
+          $ref: '#/components/schemas/UUID'
+        jarAlias:
+          type: string
+        inputId:
+          $ref: '#/components/schemas/UUID'
+        inputAlias:
+          type: string
+        configId:
+          $ref: '#/components/schemas/UUID'
+        configAlias:
+          type: string
+        createdAt:
+          $ref: '#/components/schemas/Instant'
+        startedAt:
+          $ref: '#/components/schemas/Instant'
+        finishedAt:
+          $ref: '#/components/schemas/Instant'
+        doneAt:
+          $ref: '#/components/schemas/Instant'
+    TaskRunLight:
+      type: object
+      properties:
+        taskId:
+          $ref: '#/components/schemas/UUID'
+        projectId:
+          $ref: '#/components/schemas/UUID'
+        launchedByUser:
+          $ref: '#/components/schemas/UUID'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        createdAt:
+          $ref: '#/components/schemas/Instant'
+        doneAt:
+          $ref: '#/components/schemas/Instant'
+    TaskStatus:
+      type: string
+      enum:
+      - CREATED
+      - STARTING
+      - RUNNING
+      - FINISHED
+      - TIME_OUT
+      - CANCELED
+      - FAILED
+      - DONE
+    TimeoutsSpec:
+      type: object
+      properties:
+        microtaskSeconds:
+          type: integer
+          format: int64
+          minimum: 0
+        taskSeconds:
+          type: integer
+          format: int64
+          minimum: 0
+    UUID:
+      type: string
+      format: uuid
+      pattern: '[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
+    WorkerBound:
+      type: string
+      enum:
+      - io
+      - cpu
+    WorkerResources:
+      type: object
+      required:
+      - cpu
+      - memory
+      properties:
+        cpu:
+          type: string
+          pattern: \S
+        memory:
+          type: string
+          pattern: \S
+    WorkerSpec:
+      type: object
+      required:
+      - bound
+      - resources
+      properties:
+        bound:
+          $ref: '#/components/schemas/WorkerBound'
+        concurrency:
+          type: integer
+          format: int32
+          minimum: 0
+        resources:
+          $ref: '#/components/schemas/WorkerResources'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Access JWT, передаваемый в заголовке Authorization: Bearer <token>.'
+    RefreshCookie:
+      type: apiKey
+      in: cookie
+      name: refreshJWT
+      description: Refresh JWT, передаваемый в cookie refreshJWT.
+paths:
+  /artifact-service/api/projects/{projectId}/artifacts:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 100
+          minimum: 1
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseJarArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение списка jar-артефактов
+      tags:
+      - JAR-артефакты
+      security:
+      - BearerAuth: []
+      description: Возвращает страницу jar-артефактов проекта.
+      operationId: artifact_getJarArtifacts
+    post:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArtifactRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JarArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Загрузка jar-артефакта
+      tags:
+      - JAR-артефакты
+      security:
+      - BearerAuth: []
+      description: Загружает jar-файл и сохраняет его метаданные.
+      operationId: artifact_createJarArtifact
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/artifacts/{artifactId}:
+    patch:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtifactMetaUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JarArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Изменение метаданных jar-артефакта
+      tags:
+      - JAR-артефакты
+      security:
+      - BearerAuth: []
+      description: Изменяет alias или другие метаданные jar-артефакта.
+      operationId: artifact_updateJarArtifactMetadata
+    get:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JarArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение метаданных jar-артефакта
+      tags:
+      - JAR-артефакты
+      security:
+      - BearerAuth: []
+      description: Возвращает метаданные jar-артефакта.
+      operationId: artifact_getJarArtifact
+    delete:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Удаление jar-артефакта
+      tags:
+      - JAR-артефакты
+      security:
+      - BearerAuth: []
+      description: Удаляет jar-артефакт из проекта.
+      operationId: artifact_deleteJarArtifact
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/artifacts/{artifactId}/content:
+    put:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JarArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Обновление содержимого jar-артефакта
+      tags:
+      - JAR-артефакты
+      security:
+      - BearerAuth: []
+      description: Заменяет содержимое jar-файла.
+      operationId: artifact_updateJarArtifactContent
+    get:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение содержимого jar-артефакта
+      tags:
+      - JAR-артефакты
+      security:
+      - BearerAuth: []
+      description: Возвращает бинарное содержимое jar-файла.
+      operationId: artifact_getJarArtifactContent
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/executionConfigs:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 100
+          minimum: 1
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseExecutionConfigLight'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение списка конфигураций
+      tags:
+      - Конфигурации запуска
+      security:
+      - BearerAuth: []
+      description: Возвращает страницу execution config проекта.
+      operationId: artifact_getExecutionConfigs
+    post:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionConfigRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionConfigDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Создание конфигурации запуска
+      tags:
+      - Конфигурации запуска
+      security:
+      - BearerAuth: []
+      description: Создаёт execution config для запуска задач.
+      operationId: artifact_createExecutionConfig
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/executionConfigs/{configId}:
+    patch:
+      parameters:
+      - name: configId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionConfigRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionConfigDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Изменение конфигурации запуска
+      tags:
+      - Конфигурации запуска
+      security:
+      - BearerAuth: []
+      description: Обновляет execution config.
+      operationId: artifact_updateExecutionConfig
+    get:
+      parameters:
+      - name: configId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionConfigDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение конфигурации запуска
+      tags:
+      - Конфигурации запуска
+      security:
+      - BearerAuth: []
+      description: Возвращает execution config по идентификатору.
+      operationId: artifact_getExecutionConfig
+    delete:
+      parameters:
+      - name: configId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Удаление конфигурации запуска
+      tags:
+      - Конфигурации запуска
+      security:
+      - BearerAuth: []
+      description: Удаляет execution config.
+      operationId: artifact_deleteExecutionConfig
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/inputs:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 100
+          minimum: 1
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseInputArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение списка входных данных
+      tags:
+      - Входные данные
+      security:
+      - BearerAuth: []
+      description: Возвращает страницу input-файлов проекта.
+      operationId: artifact_getInputs
+    post:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InputArtifactRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Загрузка входных данных
+      tags:
+      - Входные данные
+      security:
+      - BearerAuth: []
+      description: Загружает input-файл и сохраняет его метаданные.
+      operationId: artifact_createInput
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/inputs/{artifactId}:
+    patch:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputMetaUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Изменение метаданных входных данных
+      tags:
+      - Входные данные
+      security:
+      - BearerAuth: []
+      description: Изменяет метаданные input-файла.
+      operationId: artifact_updateInputMetadata
+    get:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение метаданных входных данных
+      tags:
+      - Входные данные
+      security:
+      - BearerAuth: []
+      description: Возвращает метаданные input-файла.
+      operationId: artifact_getInput
+    delete:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Удаление входных данных
+      tags:
+      - Входные данные
+      security:
+      - BearerAuth: []
+      description: Удаляет input-файл из проекта.
+      operationId: artifact_deleteInput
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/inputs/{artifactId}/content:
+    put:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Обновление содержимого входных данных
+      tags:
+      - Входные данные
+      security:
+      - BearerAuth: []
+      description: Заменяет содержимое input-файла.
+      operationId: artifact_updateInputContent
+    get:
+      parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение содержимого входных данных
+      tags:
+      - Входные данные
+      security:
+      - BearerAuth: []
+      description: Возвращает бинарное содержимое input-файла.
+      operationId: artifact_getInputContent
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/logs/{microtaskId}:
+    get:
+      parameters:
+      - name: microtaskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: afterSeq
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: -1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MicrotaskLogsBatch'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение backlog-логов
+      tags:
+      - Логи
+      security:
+      - BearerAuth: []
+      description: Возвращает накопленные логи микрозадачи.
+      operationId: artifact_getMicrotaskLogs
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/outputs/{outputId}:
+    get:
+      parameters:
+      - name: outputId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение метаданных output-файла
+      tags:
+      - Output-файлы
+      security:
+      - BearerAuth: []
+      description: Возвращает метаданные выходного файла.
+      operationId: artifact_getOutputMetadata
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/outputs/{outputId}/content:
+    get:
+      parameters:
+      - name: outputId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение содержимого output-файла
+      tags:
+      - Output-файлы
+      security:
+      - BearerAuth: []
+      description: Возвращает бинарное содержимое выходного файла.
+      operationId: artifact_getOutputContent
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 100
+          minimum: 1
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseTaskRunLight'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение списка задач
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает страницу task run проекта.
+      operationId: artifact_getTasks
+    post:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRunDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Создание запуска задачи
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Создаёт task run на основе jar, input и execution config.
+      operationId: artifact_createTask
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks/{taskId}:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRunDto'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение задачи
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает сведения о task run.
+      operationId: artifact_getTask
+    patch:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Отмена задачи
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Отправляет запрос на отмену task run.
+      operationId: artifact_cancelTask
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks/{taskId}/agents/{agentId}:
+    get:
+      parameters:
+      - name: agentId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwarmAgent'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение swarm-агента
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает сведения об агенте swarm-задачи.
+      operationId: artifact_getSwarmAgent
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks/{taskId}/microtasks/stateless/{microtaskId}:
+    get:
+      parameters:
+      - name: microtaskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatelessMicrotaskRun'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение stateless-микрозадачи
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает сведения о stateless-микрозадаче.
+      operationId: artifact_getStatelessMicrotask
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks/{taskId}/microtasks/swarm/{microtaskId}:
+    get:
+      parameters:
+      - name: microtaskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwarmMicrotaskRun'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение swarm-микрозадачи
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает сведения о swarm-микрозадаче.
+      operationId: artifact_getSwarmMicrotask
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks/{taskId}/outputs:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutputList'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение output-файлов задачи
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает список выходных файлов задачи.
+      operationId: artifact_getTaskOutputs
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks/{taskId}/stats/stateless:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatelessTaskState'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение stateless-состояния
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает агрегированное состояние stateless-задачи.
+      operationId: artifact_getStatelessTaskState
+    servers:
+    - url: http://localhost:8082
+  /artifact-service/api/projects/{projectId}/tasks/{taskId}/stats/swarm:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwarmTaskState'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение swarm-состояния
+      tags:
+      - Задачи
+      security:
+      - BearerAuth: []
+      description: Возвращает агрегированное состояние swarm-задачи.
+      operationId: artifact_getSwarmTaskState
+    servers:
+    - url: http://localhost:8082
+info:
+  title: MinionFlow Artifact Service API
+  version: 1.0-SNAPSHOT
+  description: 'API сервиса artifact-service: управление jar-артефактами, входными файлами, execution config, task run, логами
+    и output-файлами.'
+servers:
+- url: http://localhost:8082
+  description: Локальный запуск artifact-service
+tags:
+- name: JAR-артефакты
+  description: Загрузка, получение, изменение и удаление jar-артефактов проекта.
+- name: Конфигурации запуска
+  description: Создание и сопровождение execution config для запуска задач.
+- name: Входные данные
+  description: Загрузка, получение, изменение и удаление input-файлов проекта.
+- name: Логи
+  description: Получение backlog-логов выполнения микрозадач.
+- name: Output-файлы
+  description: Получение метаданных и содержимого выходных файлов задачи.
+- name: Задачи
+  description: Создание task run, получение состояния, отмена и просмотр микрозадач.

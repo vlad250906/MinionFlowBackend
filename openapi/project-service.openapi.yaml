@@ -1,0 +1,448 @@
+openapi: 3.0.4
+components:
+  schemas:
+    Instant:
+      type: string
+      format: date-time
+    MemberRole:
+      type: string
+      enum:
+      - OWNER
+      - MAINTAINER
+      - USER
+    PaginatedResponseProjectInfoShort:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        pageIndex:
+          type: integer
+          format: int32
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectInfoShort'
+    PaginatedResponseProjectMember:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        pageIndex:
+          type: integer
+          format: int32
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectMember'
+    ProjectInfo:
+      type: object
+      properties:
+        projectId:
+          $ref: '#/components/schemas/UUID'
+        projectName:
+          $ref: '#/components/schemas/ProjectNameVo'
+        projectDescription:
+          type: string
+    ProjectInfoRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          $ref: '#/components/schemas/ProjectNameVo'
+        description:
+          type: string
+    ProjectInfoShort:
+      type: object
+      properties:
+        projectId:
+          $ref: '#/components/schemas/UUID'
+        projectName:
+          $ref: '#/components/schemas/ProjectNameVo'
+    ProjectMember:
+      type: object
+      properties:
+        projectId:
+          $ref: '#/components/schemas/UUID'
+        userId:
+          $ref: '#/components/schemas/UUID'
+        username:
+          type: string
+        memberRole:
+          type: string
+        memberSince:
+          $ref: '#/components/schemas/Instant'
+    ProjectMemberAddRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        memberRole:
+          $ref: '#/components/schemas/MemberRole'
+    ProjectMemberUpdateRequest:
+      type: object
+      properties:
+        memberRole:
+          $ref: '#/components/schemas/MemberRole'
+    ProjectNameVo:
+      type: string
+    UUID:
+      type: string
+      format: uuid
+      pattern: '[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Access JWT, передаваемый в заголовке Authorization: Bearer <token>.'
+    RefreshCookie:
+      type: apiKey
+      in: cookie
+      name: refreshJWT
+      description: Refresh JWT, передаваемый в cookie refreshJWT.
+paths:
+  /project-service/projects:
+    get:
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          maximum: 1000000
+          minimum: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 1000
+          minimum: 1
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseProjectInfoShort'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение списка проектов
+      tags:
+      - Проекты
+      security:
+      - BearerAuth: []
+      description: Возвращает страницу проектов, доступных текущему пользователю.
+      operationId: project_getProjects
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInfoRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectInfo'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Создание проекта
+      tags:
+      - Проекты
+      security:
+      - BearerAuth: []
+      description: Создаёт проект и назначает текущего пользователя владельцем.
+      operationId: project_createProject
+    servers:
+    - url: http://localhost:8081
+  /project-service/projects/{projectId}:
+    patch:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInfoRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectInfo'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Изменение проекта
+      tags:
+      - Проекты
+      security:
+      - BearerAuth: []
+      description: Изменяет название или описание проекта.
+      operationId: project_updateProject
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectInfo'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение проекта
+      tags:
+      - Проекты
+      security:
+      - BearerAuth: []
+      description: Возвращает сведения о проекте по идентификатору.
+      operationId: project_getProject
+    delete:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Удаление проекта
+      tags:
+      - Проекты
+      security:
+      - BearerAuth: []
+      description: Удаляет проект или делает его недоступным согласно реализации сервиса.
+      operationId: project_deleteProject
+    servers:
+    - url: http://localhost:8081
+  /project-service/projects/{projectId}/members:
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          maximum: 1000000
+          minimum: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 1000
+          minimum: 1
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseProjectMember'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение участников проекта
+      tags:
+      - Участники проектов
+      security:
+      - BearerAuth: []
+      description: Возвращает страницу участников проекта.
+      operationId: project_getProjectMembers
+    post:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberAddRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Добавление участника
+      tags:
+      - Участники проектов
+      security:
+      - BearerAuth: []
+      description: Добавляет пользователя в проект по username.
+      operationId: project_addProjectMember
+    servers:
+    - url: http://localhost:8081
+  /project-service/projects/{projectId}/members/{userId}:
+    delete:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Удаление участника
+      tags:
+      - Участники проектов
+      security:
+      - BearerAuth: []
+      description: Удаляет пользователя из проекта.
+      operationId: project_removeProjectMember
+    get:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение участника проекта
+      tags:
+      - Участники проектов
+      security:
+      - BearerAuth: []
+      description: Возвращает сведения о конкретном участнике проекта.
+      operationId: project_getProjectMember
+    patch:
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Изменение роли участника
+      tags:
+      - Участники проектов
+      security:
+      - BearerAuth: []
+      description: Изменяет роль участника проекта.
+      operationId: project_updateProjectMemberRole
+    servers:
+    - url: http://localhost:8081
+info:
+  title: MinionFlow Project Service API
+  version: 1.0-SNAPSHOT
+  description: 'API сервиса project-service: управление проектами, участниками проектов и их ролями.'
+servers:
+- url: http://localhost:8081
+  description: Локальный запуск project-service
+tags:
+- name: Проекты
+  description: Создание, просмотр, изменение и удаление проектов.
+- name: Участники проектов
+  description: Добавление участников, получение состава проекта и изменение ролей.

@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: default
+  name: worker-manager-sa
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: worker-manager-role
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: [ "create","get","list","watch","delete","patch","update"]
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments" ]
+    verbs: ["create","get","list","watch","delete","patch","update"]
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments/scale" ]
+    verbs: [ "get","patch","update" ]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: default
+  name: worker-manager-rb
+subjects:
+  - kind: ServiceAccount
+    name: worker-manager-sa
+roleRef:
+  kind: Role
+  name: worker-manager-role
+  apiGroup: rbac.authorization.k8s.io

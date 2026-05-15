@@ -1,0 +1,33 @@
+{
+  "alias": "stateless-curl-config",
+  "config": {
+    "type": "stateless",
+    "scheduling": {
+        "mode": "fixed",
+        "batchSize" : 4,
+        "parallelism" : 3
+      },
+      "worker": {
+        "bound": "cpu",
+        "concurrency": 1,
+        "resources": {
+          "cpu": "500m",
+          "memory": "128Mi"
+        }
+      },
+      "timeouts": {
+        "microtaskSeconds": 60,
+        "taskSeconds": 3600
+      },
+      "retry": {
+        "maxAttempts": 3,
+        "backoff": {
+          "strategy": "exponential",
+          "baseMs": 500,
+          "maxMs": 10000,
+          "jitter": true
+        }
+      }
+  }
+
+}

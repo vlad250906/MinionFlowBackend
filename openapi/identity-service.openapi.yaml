@@ -1,0 +1,380 @@
+openapi: 3.0.4
+components:
+  schemas:
+    AccountStatus:
+      type: string
+      enum:
+      - CREATED
+      - ACTIVE
+      - SUSPENDED
+    EmailVo:
+      type: string
+    Instant:
+      type: string
+      format: date-time
+    JwtPairResponse:
+      type: object
+      properties:
+        accessJWT:
+          type: string
+        validUntil:
+          $ref: '#/components/schemas/Instant'
+    LoginRequest:
+      type: object
+      required:
+      - password
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailVo'
+        username:
+          $ref: '#/components/schemas/UsernameVo'
+        password:
+          type: string
+          minLength: 1
+    LoginResponse:
+      type: object
+      properties:
+        accountId:
+          $ref: '#/components/schemas/UUID'
+        accessJWT:
+          type: string
+        validUntil:
+          $ref: '#/components/schemas/Instant'
+    PasswordChangeRequest:
+      type: object
+      required:
+      - oldPassword
+      - newPassword
+      properties:
+        oldPassword:
+          type: string
+          minLength: 1
+        newPassword:
+          type: string
+          minLength: 1
+    RecoveryBeginRequest:
+      type: object
+      required:
+      - email
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailVo'
+    RecoveryEndRequest:
+      type: object
+      required:
+      - userId
+      - verificationToken
+      - password
+      properties:
+        userId:
+          $ref: '#/components/schemas/UUID'
+        verificationToken:
+          $ref: '#/components/schemas/UUID'
+        password:
+          type: string
+          minLength: 1
+    RegisterRequest:
+      type: object
+      required:
+      - email
+      - username
+      - password
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailVo'
+        username:
+          $ref: '#/components/schemas/UsernameVo'
+        password:
+          type: string
+          minLength: 1
+    RegisterResponse:
+      type: object
+      properties:
+        accountId:
+          $ref: '#/components/schemas/UUID'
+        verificationRequired:
+          type: boolean
+    UUID:
+      type: string
+      format: uuid
+      pattern: '[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
+    UserInfo:
+      type: object
+      properties:
+        userId:
+          $ref: '#/components/schemas/UUID'
+        email:
+          type: string
+        username:
+          type: string
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+    UserInfoChangeRequest:
+      type: object
+      required:
+      - newUsername
+      properties:
+        newUsername:
+          $ref: '#/components/schemas/UsernameVo'
+    UsernameVo:
+      type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Access JWT, передаваемый в заголовке Authorization: Bearer <token>.'
+    RefreshCookie:
+      type: apiKey
+      in: cookie
+      name: refreshJWT
+      description: Refresh JWT, передаваемый в cookie refreshJWT.
+paths:
+  /identity-service/api/account-activations:
+    post:
+      parameters:
+      - name: accountId
+        in: query
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: activationToken
+        in: query
+        schema:
+          $ref: '#/components/schemas/UUID'
+      responses:
+        '201':
+          description: Ресурс создан
+      summary: Подтверждение аккаунта
+      tags:
+      - Аккаунт
+      description: Активирует аккаунт по идентификатору пользователя и verification token.
+      operationId: identity_activateAccount
+    servers:
+    - url: http://localhost:8080
+  /identity-service/api/accounts:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Регистрация пользователя
+      tags:
+      - Аккаунт
+      description: Создаёт учётную запись пользователя и инициирует подтверждение email.
+      operationId: identity_registerAccount
+    servers:
+    - url: http://localhost:8080
+  /identity-service/api/accounts/me:
+    patch:
+      parameters:
+      - name: refreshJWT
+        in: cookie
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfoChangeRequest'
+        required: true
+      responses:
+        '204':
+          description: Операция выполнена успешно, тело ответа отсутствует
+      summary: Изменение username
+      tags:
+      - Аккаунт
+      description: Изменяет данные текущего пользователя, включая username.
+      operationId: identity_updateCurrentAccount
+      security:
+      - RefreshCookie: []
+    get:
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав для выполнения операции
+      summary: Получение текущего аккаунта
+      tags:
+      - Аккаунт
+      security:
+      - BearerAuth: []
+      description: Возвращает сведения о текущем авторизованном пользователе.
+      operationId: identity_getCurrentAccount
+    servers:
+    - url: http://localhost:8080
+  /identity-service/api/accounts/me/passwords:
+    patch:
+      parameters:
+      - name: refreshJWT
+        in: cookie
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+      summary: Изменение пароля
+      tags:
+      - Аккаунт
+      description: Изменяет пароль текущего пользователя.
+      operationId: identity_changePassword
+      security:
+      - RefreshCookie: []
+    servers:
+    - url: http://localhost:8080
+  /identity-service/api/password-resets:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryEndRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Завершение восстановления пароля
+      tags:
+      - Восстановление пароля
+      description: Устанавливает новый пароль по recovery token.
+      operationId: identity_endPasswordRecovery
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryBeginRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Начало восстановления пароля
+      tags:
+      - Восстановление пароля
+      description: Создаёт recovery-запрос и отправляет пользователю ссылку восстановления.
+      operationId: identity_beginPasswordRecovery
+    servers:
+    - url: http://localhost:8080
+  /identity-service/api/sessions:
+    delete:
+      parameters:
+      - name: refreshJWT
+        in: cookie
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Операция выполнена успешно
+      summary: Завершение всех сессий
+      tags:
+      - Сессии
+      description: Завершает все refresh-сессии текущего пользователя.
+      operationId: identity_logoutAllSessions
+      security:
+      - RefreshCookie: []
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Некорректный запрос или ошибка валидации
+      summary: Вход пользователя
+      tags:
+      - Сессии
+      description: Аутентифицирует пользователя по email/username и паролю.
+      operationId: identity_login
+    servers:
+    - url: http://localhost:8080
+  /identity-service/api/sessions/me:
+    delete:
+      parameters:
+      - name: refreshJWT
+        in: cookie
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Операция выполнена успешно
+      summary: Завершение текущей сессии
+      tags:
+      - Сессии
+      description: Завершает текущую refresh-сессию пользователя.
+      operationId: identity_logoutCurrentSession
+      security:
+      - RefreshCookie: []
+    servers:
+    - url: http://localhost:8080
+  /identity-service/api/sessions/refresh:
+    post:
+      parameters:
+      - name: refreshJWT
+        in: cookie
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Операция выполнена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtPairResponse'
+      summary: Обновление access token
+      tags:
+      - Сессии
+      description: Обновляет access token с использованием refresh token из cookie.
+      operationId: identity_refreshToken
+      security:
+      - RefreshCookie: []
+    servers:
+    - url: http://localhost:8080
+info:
+  title: MinionFlow Identity Service API
+  version: 1.0-SNAPSHOT
+  description: 'API сервиса identity-service: регистрация пользователей, подтверждение email, вход, JWT-сессии, refresh-сценарий,
+    изменение данных аккаунта и восстановление доступа.'
+servers:
+- url: http://localhost:8080
+  description: Локальный запуск identity-service
+tags:
+- name: Аккаунт
+  description: Регистрация, подтверждение email и изменение данных текущего пользователя.
+- name: Восстановление пароля
+  description: Создание recovery-запроса и установка нового пароля.
+- name: Сессии
+  description: Вход, refresh-сценарий и завершение пользовательских сессий.

@@ -1,0 +1,77 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minionflow-backend-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /identity-service
+            pathType: Prefix
+            backend:
+              service:
+                name: identity-service
+                port:
+                  number: 8080
+          - path: /project-service
+            pathType: Prefix
+            backend:
+              service:
+                name: project-service
+                port:
+                  number: 8081
+          - path: /artifact-service
+            pathType: Prefix
+            backend:
+              service:
+                name: artifact-service
+                port:
+                  number: 8082
+          - path: /ws/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: artifact-service
+                port:
+                  number: 8082
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rabbitmq-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: rabbitmq.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rabbitmq
+                port:
+                  number: 15672
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: minio.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio
+                port:
+                  number: 9001
